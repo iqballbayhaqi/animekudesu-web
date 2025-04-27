@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
@@ -7,6 +8,23 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
+
+// create types for anime data
+interface Anime {
+  link: string;
+  img: string;
+  alt: string;
+  title: string;
+  episode: string;
+  released: string;
+  type: string;
+  score: number;
+}
+
+interface Genres {
+  title: string;
+  id: string;
+}
 
 async function fetchNewAnime() {
   const { data } = await axios.get(
@@ -61,7 +79,7 @@ export default function Home() {
         slidesPerView={1} // <--- satu per satu
         className="overflow-hidden"
       >
-        {newAnime.data.data.map((anime, index) => (
+        {newAnime.data.data.map((anime: Anime, index: number) => (
           <SwiperSlide key={index}>
             <Link href={anime.link}>
               <div className="relative group h-[65vh] md:h-[85vh] w-full cursor-pointer overflow-hidden">
@@ -94,7 +112,7 @@ export default function Home() {
         <ListItemHorizontal title="On Going Anime" apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" queryKey="on-going-anime" />
         <ListItemHorizontal title="Completed Anime" apifetch="https://animekudesu-be.gatradigital.com/completed-anime" queryKey="completed-anime" />
         <ListItemHorizontal title="Completed Anime" apifetch="https://animekudesu-be.gatradigital.com/completed-anime" queryKey="completed-anime" />
-        {!genres.isLoading && genres.data.data.map((genre, index) => (
+        {!genres.isLoading && genres.data.data.map((genre: Genres, index: number) => (
           <ListItemHorizontal
             key={index}
             title={genre.title}

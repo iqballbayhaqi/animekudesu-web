@@ -1,5 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import axios from "axios";
 import { Star } from "lucide-react";
 import Link from "next/link";
@@ -7,7 +8,28 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
 
-const ListItemHorizontal = (props) => {
+interface ListItemHorizontalProps {
+  title: string;
+  placeholder?: boolean;
+  apifetch: string;
+  queryKey?: string;
+}
+
+interface Anime {
+  detail_url: string;
+  img: string;
+  alt: string;
+  title: string;
+  type: string;
+  score: number;
+  genres?: Genre[];
+}
+
+interface Genre {
+  tag: string;
+}
+
+const ListItemHorizontal = (props: ListItemHorizontalProps) => {
   const { title, placeholder, apifetch, queryKey } = props;
 
   async function fetch() {
@@ -19,10 +41,6 @@ const ListItemHorizontal = (props) => {
     queryKey: [queryKey || Math.random().toString(36).substring(2, 15)],
     queryFn: fetch,
   });
-
-  useEffect(() => {
-    console.log("data => ", data.data);
-  }, [data.data]);
 
   return (
     <div className="w-full px-4">
@@ -42,7 +60,7 @@ const ListItemHorizontal = (props) => {
         {(placeholder || data.isLoading
           ? Array.from({ length: 10 })
           : data.data.data
-        ).map((anime, index) => {
+        ).map((anime: Anime, index: number) => {
           return (
             <SwiperSlide key={index}>
               {placeholder || data.isLoading ? (
@@ -91,7 +109,7 @@ const ListItemHorizontal = (props) => {
                         />
                       </div>
                         <div className="flex gap-1 mt-2 overflow-x-auto scrollbar-hide">
-                        {anime.genres?.length > 2 ? (
+                        {(anime?.genres?.length ?? 0) > 2 ? (
                           <div className="overflow-hidden whitespace-nowrap">
                           <div className="inline-block animate-marquee">
                             {anime.genres?.map((genre, index) => (
