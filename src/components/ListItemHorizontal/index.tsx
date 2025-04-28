@@ -23,6 +23,7 @@ interface Anime {
   type: string;
   score: number;
   genres?: Genre[];
+  slug: string;
 }
 
 interface Genre {
@@ -44,7 +45,7 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
 
   return (
     <div className="w-full px-4">
-      <h2 className="text-2xl font-bold text-white mb-4">{title}</h2>
+      <h2 className="text-3xl font-bold text-white mb-4">{title}</h2>
 
       <Swiper
         modules={[Navigation]}
@@ -88,7 +89,7 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
                   </div>
                 </div>
               ) : (
-                <Link href={anime.detail_url}>
+                <Link href={`/anime${anime.slug}`}>
                   <div className="group rounded-md">
                     <div className="aspect-[2/3] overflow-hidden rounded-md bg-gray-800 border-none">
                       <img
@@ -141,6 +142,11 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
             </SwiperSlide>
           );
         })}
+            <SwiperSlide style={{ height: 'auto' }}>
+               <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-md cursor-pointer hover:bg-gray-700 transition duration-300 ease-in-out">
+                  <p className="text-white text-sm font-semibold">See More</p>
+               </div>
+            </SwiperSlide>
       </Swiper>
     </div>
   );

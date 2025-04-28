@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
+import { X } from "lucide-react";
 
 // create types for anime data
 interface Anime {
@@ -42,6 +44,7 @@ async function fetchGenres() {
 }
 
 export default function Home() {
+  const [popup, setPopup] = useState(true);
   const newAnime = useQuery({
     queryKey: ["new-anime"],
     queryFn: fetchNewAnime,
@@ -111,7 +114,6 @@ export default function Home() {
       <div className="flex flex-col gap-4 my-4">
         <ListItemHorizontal title="On Going Anime" apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" queryKey="on-going-anime" />
         <ListItemHorizontal title="Completed Anime" apifetch="https://animekudesu-be.gatradigital.com/completed-anime" queryKey="completed-anime" />
-        <ListItemHorizontal title="Completed Anime" apifetch="https://animekudesu-be.gatradigital.com/completed-anime" queryKey="completed-anime" />
         {!genres.isLoading && genres.data.data.map((genre: Genres, index: number) => (
           <ListItemHorizontal
             key={index}
@@ -121,6 +123,19 @@ export default function Home() {
           />
         ))}
       </div>
+
+      {popup && <div className="fixed inset-0 flex items-center justify-center bg-[#000000a4] z-50">
+        <div className="relative">
+          <img
+            src="/ChatGPT Image Apr 27, 2025, 08_50_00 PM.png"
+            alt="Placeholder"
+            className="h-96"
+          />
+          <div onClick={() => setPopup(false)} className="absolute top-[-15px] right-[-15px] bg-gray-900 rounded-full p-2 cursor-pointer hover:bg-gray-800 transition duration-300">
+            <X />
+          </div>
+        </div>
+        </div>}
     </div>
   );
 }
