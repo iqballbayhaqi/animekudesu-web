@@ -127,7 +127,7 @@ export default function Home() {
       {popup && <div className="fixed inset-0 flex items-center justify-center bg-[#000000a4] z-50">
         <div className="relative">
           <img
-            src="/ChatGPT Image Apr 27, 2025, 08_50_00 PM.png"
+            src="/banner.png"
             alt="Placeholder"
             className="h-96"
           />
