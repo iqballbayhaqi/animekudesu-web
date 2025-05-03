@@ -29,7 +29,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
       <main className="relative min-h-screen bg-black text-white">
       <div className="relative w-full h-[90vh]">
         <Image
-          src={dataSupport.find(support => support.slug === id)?.logo || ''}
+          src={dataSupport.find(support => support.slug === id)?.landscape || data.img}
           alt={data.title}
           layout="fill"
           objectFit="cover"
