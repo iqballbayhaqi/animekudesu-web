@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import Loading from '@/components/Loading';
 import Image from 'next/image';
 import EpisodeCard from '@/components/EpisodeCard';
+import dataSupport from '@/utils/dataSupport';
 
 async function fetch (id: string) {
   const { data } = await axios.get(`https://animekudesu-be.gatradigital.com/detail-anime/${id}`);
@@ -35,9 +36,19 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
           className="brightness-50 object-center"
         />
         <div className="absolute inset-0 flex flex-col justify-center items-start p-8">
+          {dataSupport.some(support => support.slug === id) ? (
+            <Image
+              src={dataSupport.find(support => support.slug === id)?.logo || ''}
+              alt="Support Logo"
+              width={0}
+              height={250}
+              className="mb-4 w-auto"
+              style={{ height: '250px', width: 'auto' }}
+            />
+          ) : (
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             {data.title}
-          </h1>
+          </h1>)}
           <h1 className="text-xl md:text-4xl font-bold mb-4 w-1/2">
             {data.japanese_title}
           </h1>
@@ -60,8 +71,8 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
             START WATCHING E1
           </button>
         </div>
-      <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent">
-        <div>
+      <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 absolute left-0 right-0 bottom-[-100px] bg-gradient-to-t from-black via-black/70 to-transparent">
+        <div className="text-sm text-gray-400 mb-4 h-48 overflow-y-scroll">
           {data.descriptions.map((desc: string, index: number) => (
             <p key={index} className="text-gray-300 mb-2">
               {desc}
