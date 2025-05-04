@@ -36,7 +36,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
           className="brightness-50 object-center"
         />
         <div className="absolute inset-0 flex flex-col justify-center items-start p-8">
-          {(dataSupport.some(support => support.slug === id) && dataSupport.some(support => support?.logo !== "")) ? (
+          {(dataSupport.some(support => support.slug === id) && dataSupport.find(support => support?.slug === id)?.logo !== '') ? (
             <Image
               src={dataSupport.find(support => support.slug === id)?.logo || ''}
               alt="Support Logo"
