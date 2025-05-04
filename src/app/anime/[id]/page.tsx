@@ -92,7 +92,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
 
     </main>
     
-    <div className='flex gap-4 p-8'>
+    <div className='flex gap-4 p-8 flex-wrap'>
       {data.episodes
         .slice()
         .reverse()
