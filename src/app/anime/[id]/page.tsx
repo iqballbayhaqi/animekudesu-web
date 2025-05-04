@@ -36,7 +36,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
           className="brightness-50 object-center"
         />
         <div className="absolute inset-0 flex flex-col justify-center items-start p-8">
-          {dataSupport.some(support => support.slug === id) ? (
+          {(dataSupport.some(support => support.slug === id) && dataSupport.some(support => support?.logo !== "")) ? (
             <Image
               src={dataSupport.find(support => support.slug === id)?.logo || ''}
               alt="Support Logo"
@@ -47,7 +47,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
             />
           ) : (
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            {data.title}
+            {data.synonims}
           </h1>)}
           <h1 className="text-xl md:text-4xl font-bold mb-4 w-1/2">
             {data.japanese_title}
@@ -80,6 +80,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
           ))}
         </div>
         <div className="text-sm text-gray-400">
+          <p><span className="font-semibold">English:</span> {data.english_title.trim()}</p>
           <p><span className="font-semibold">Season:</span> {data.season}</p>
           <p><span className="font-semibold">Producers:</span> {data.producer}</p>
           <p><span className="font-semibold">Studio:</span> {data.studio}</p>
@@ -91,7 +92,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
 
     </main>
     
-    <div className='grid grid-cols-7 gap-4 p-8'>
+    <div className='flex gap-4 p-8'>
       {data.episodes
         .slice()
         .reverse()
