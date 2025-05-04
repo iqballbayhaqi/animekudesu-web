@@ -10,15 +10,16 @@ const Navbar = () => {
           <TvIcon className='text-blue-400' />
           <p className='text-blue-400 font-bold text-2xl hover:text-white'>ANIMEKUDESU</p>
         </Link>
-        <ul>
-            <li className='inline-block px-4 py-2 hover:bg-gray-700 rounded'>Home</li>
+        <ul className='hidden md:flex space-x-4'>
             <li className='inline-block px-4 py-2 hover:bg-gray-700 rounded'>Genres</li>
             <li className='inline-block px-4 py-2 hover:bg-gray-700 rounded'>Latest</li>
             <li className='inline-block px-4 py-2 hover:bg-gray-700 rounded'>Popular</li>
         </ul>
       </div>
       <div className='flex space-x-4'>
-        <Search />
+        <Link href="/search">
+          <Search />
+        </Link>
         <Bookmark />
         <UserRound />
       </div>

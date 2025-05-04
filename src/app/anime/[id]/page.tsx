@@ -52,7 +52,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
           <h1 className="text-xl md:text-4xl font-bold mb-4 w-1/2">
             {data.japanese_title}
           </h1>
-          <div className="flex items-center gap-3 mb-4 text-sm text-gray-300">
+          <div className="flex items-center gap-3 mb-4 text-sm text-gray-300 flex-wrap">
             <span>|</span>
             <span>{`${data.type}`}</span>
             <span>|</span>
@@ -71,7 +71,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
             START WATCHING E1
           </button>
         </div>
-      <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 absolute left-0 right-0 bottom-[-100px] bg-gradient-to-t from-black via-black/70 to-transparent">
+      <div className="p-8 sm:grid grid-cols-1 md:grid-cols-2 gap-8 absolute left-0 right-0 bottom-[-100px] bg-gradient-to-t from-black via-black/70 to-transparent hidden">
         <div className="text-sm text-gray-400 mb-4 h-48 overflow-y-scroll">
           {data.descriptions.map((desc: string, index: number) => (
             <p key={index} className="text-gray-300 mb-2">
@@ -92,7 +92,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
 
     </main>
     
-    <div className='flex gap-4 p-8 flex-wrap'>
+    <div className='flex gap-4 p-8 flex-wrap justify-center'>
       {data.episodes
         .slice()
         .reverse()
