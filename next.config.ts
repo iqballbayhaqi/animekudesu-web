@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['samehadaku.mba', 'imgsrv.crunchyroll.com', 'arank-party-ridatsu-official.com', 'a.storyblok.com'],
+    domains: ['samehadaku.mba', 'imgsrv.crunchyroll.com', 'arank-party-ridatsu-official.com', 'a.storyblok.com', 'v1.samehadaku.how'],
   },
 };
 

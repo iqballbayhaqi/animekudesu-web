@@ -77,7 +77,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
     <Fragment>
       <div
         onClick={fetchEpisodeDetailsOnTrigger}
-        className="relative rounded-lg p-4 w-full sm:w-64 shadow-sm bg-cover bg-center transform transition-transform duration-300 hover:scale-105"
+        className="relative rounded-lg p-4 w-full sm:w-64 shadow-sm bg-cover bg-center transform transition-transform duration-300 hover:scale-105 cursor-pointer"
         style={{ backgroundImage: `url(${img})` }}
       >
         <div className="absolute inset-0 bg-black opacity-50 rounded-lg"></div>

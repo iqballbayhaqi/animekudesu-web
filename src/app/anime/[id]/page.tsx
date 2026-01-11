@@ -89,7 +89,7 @@ const Anime = ({ params }: { params: Promise<{ id: string }> }) => {
                 <span className="text-yellow-400 text-lg font-semibold mr-2">{`★ ${data.rating}`}</span>
                 <span className="text-sm text-gray-300">{`(${data.rating_count})`}</span>
               </div>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-md">
+              <button className="bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-md cursor-pointer">
                 START WATCHING E1
               </button>
             </div>
