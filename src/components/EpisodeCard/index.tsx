@@ -1,7 +1,7 @@
 "use client";
 import React, { Fragment, useEffect, useState } from "react";
 import axios from "axios";
-import { X } from "lucide-react";
+import { X, Play, Clock } from "lucide-react";
 import groupByProvider from "@/utils/groupByProvider";
 
 interface EpisodeCardProps {
@@ -37,6 +37,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
 }) => {
   const [popup, setPopup] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   async function fetchEpisodeDetails() {
     const { data } = await axios.get(
@@ -62,7 +63,6 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
         `https://animekudesu-be.gatradigital.com${video}`
       );
       const data = await response.json();
-      // window.open(data.url, "_blank");
       setVideoUrl(data.url);
   };
 
@@ -75,71 +75,114 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
 
   return (
     <Fragment>
+      {/* Episode Card - Netflix Style */}
       <div
         onClick={fetchEpisodeDetailsOnTrigger}
-        className="relative rounded-lg p-4 w-full sm:w-64 shadow-sm bg-cover bg-center transform transition-transform duration-300 hover:scale-105 cursor-pointer"
-        style={{ backgroundImage: `url(${img})` }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="group relative bg-gray-900 rounded-md overflow-hidden cursor-pointer hover:bg-gray-800 transition-all duration-300"
       >
-        <div className="absolute inset-0 bg-black opacity-50 rounded-lg"></div>
-        <div className="relative">
-          <h2 className="text-2xl font-bold mb-2 text-white shadow-lg">
-            EPS. {episodeNumber}
-          </h2>
-          <p className="text-base text-white shadow-lg">{title}</p>
-          <p className="text-base text-white shadow-lg">{description}</p>
+        <div className="flex gap-4 p-3">
+          {/* Thumbnail */}
+          <div className="relative w-32 h-20 flex-shrink-0 rounded overflow-hidden">
+            <img 
+              src={img} 
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+            {/* Play overlay on hover */}
+            <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+              </div>
+            </div>
+            {/* Episode number badge */}
+            <div className="absolute bottom-1 right-1 bg-black/80 px-2 py-0.5 rounded text-xs font-medium">
+              {episodeNumber}
+            </div>
+          </div>
+          
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-semibold text-white text-sm truncate">
+                Episode {episodeNumber}
+              </h3>
+              <div className="flex items-center gap-1 text-gray-500 text-xs">
+                <Clock className="w-3 h-3" />
+                <span>24m</span>
+              </div>
+            </div>
+            <p className="text-gray-400 text-xs line-clamp-2">{title}</p>
+            <p className="text-gray-500 text-xs mt-1 line-clamp-1">{description}</p>
+          </div>
         </div>
+        
+        {/* Bottom border highlight on hover */}
+        <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 transform origin-left transition-transform duration-300 ${isHovered ? 'scale-x-100' : 'scale-x-0'}`} />
       </div>
 
-      {popup && <div className="fixed inset-0 flex items-start justify-center bg-[#000000a4] z-50 pt-10 overflow-y-auto">
-        <div className="relative bg-gray-900 rounded-lg p-4 w-full sm:w-1/2 shadow-lg">
-          <div className="">
-            {videoUrl ? (
-              <iframe
-              src={videoUrl}
-              className="w-full h-[400px] rounded-lg"
-              allowFullScreen
-              title="Video Player"
-              ></iframe>
-            ) : (
-              <div className="w-full h-[400px] rounded-lg">
-              <p className="text-white text-center">Loading...</p>
-              </div>
-            )}
-            <div className="mt-4">
-              <p className="text-2xl">{episodeDetails?.title}</p>
-              <p className="text-white">{episodeDetails?.description}</p>  
-            </div>
-            <div>
-              {Object.entries(groupByProvider(episodeDetails?.videos || [])).map(
-                ([providerName, videos], index) => (
-                  <div key={index} className="mt-4">
-                    <h2 className="text-white text-lg mb-2">{providerName}</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {videos.map((video, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-2 bg-gray-800 rounded-lg gap-4 w-full sm:w-auto"
-                        >
-                          <p className="text-white">{video.title}</p>
-                          <button
-                            onClick={() => fetchEpisodeVideos(video.video)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer"
-                          >
-                            Watch
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
+      {/* Video Popup Modal */}
+      {popup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/90 z-[100] p-4 overflow-y-auto scrollbar-modal">
+          <div className="relative bg-gray-900 rounded-lg w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-modal">
+            {/* Close Button */}
+            <button 
+              onClick={() => setPopup(false)} 
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {/* Video Player */}
+            <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
+              {videoUrl ? (
+                <iframe
+                  src={videoUrl}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title="Video Player"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="animate-spin w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full" />
+                </div>
               )}
             </div>
-          </div>
-          <div onClick={() => setPopup(false)} className="absolute top-[-15px] right-[-15px] bg-gray-900 rounded-full p-2 cursor-pointer hover:bg-gray-800 transition duration-300">
-            <X />
+            
+            {/* Episode Info */}
+            <div className="p-6">
+              <h2 className="text-2xl font-heading text-white mb-2">{episodeDetails?.title}</h2>
+              <p className="text-gray-400 mb-6">{episodeDetails?.description}</p>
+              
+              {/* Server Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Select Server</h3>
+                {Object.entries(groupByProvider(episodeDetails?.videos || [])).map(
+                  ([providerName, videos], index) => (
+                    <div key={index} className="bg-gray-800/50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+                        {providerName}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {videos.map((video, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => fetchEpisodeVideos(video.video)}
+                            className="bg-gray-700 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+                          >
+                            {video.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         </div>
-        </div>}
+      )}
     </Fragment>
   );
 };
