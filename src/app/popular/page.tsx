@@ -1,13 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
-import { Star, Play, TrendingUp, Loader2, Flame } from "lucide-react";
+import { Star, Play, TrendingUp, Flame, Eye, ArrowUpAZ, ArrowDownAZ, Clock, Sparkles } from "lucide-react";
 
 interface Anime {
   detail_url: string;
@@ -15,75 +15,67 @@ interface Anime {
   alt: string;
   title: string;
   type: string;
-  score: number;
+  score: string;
   slug: string;
-  genres?: { tag: string }[];
+  total_views: number;
+  description: string;
+  genres?: { tag: string; link: string }[];
 }
 
-interface PopularResponse {
+interface OrderOption {
+  order: string;
+  name: string;
+  endpoint: string;
+}
+
+interface OrderAnimeResponse {
   data: Anime[];
-  total_page: number;
+  total_items: number;
   current_page: number;
+  total_page: number;
+  order: string;
+  available_orders: OrderOption[];
 }
 
-async function fetchPopularAnime(page: number): Promise<PopularResponse> {
+const ORDER_ICONS: { [key: string]: React.ReactNode } = {
+  "popular": <TrendingUp className="w-4 h-4" />,
+  "a-z": <ArrowUpAZ className="w-4 h-4" />,
+  "z-a": <ArrowDownAZ className="w-4 h-4" />,
+  "latest-update": <Clock className="w-4 h-4" />,
+  "latest-added": <Sparkles className="w-4 h-4" />,
+};
+
+async function fetchOrderAnime(order: string): Promise<OrderAnimeResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/popular-anime?page=${page}`
+    `https://animekudesu-be.gatradigital.com/order-anime/${order}`
   );
   return data;
 }
 
+function formatViews(views: number): string {
+  if (views >= 1000000) {
+    return (views / 1000000).toFixed(1) + "M";
+  } else if (views >= 1000) {
+    return (views / 1000).toFixed(1) + "K";
+  }
+  return views.toString();
+}
+
 const PopularPage = () => {
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [currentOrder, setCurrentOrder] = useState<string>("popular");
 
   const {
     data,
     isLoading,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["popular-anime"],
-    queryFn: ({ pageParam = 1 }) => fetchPopularAnime(pageParam),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.current_page < lastPage.total_page) {
-        return lastPage.current_page + 1;
-      }
-      return undefined;
-    },
+  } = useQuery({
+    queryKey: ["order-anime", currentOrder],
+    queryFn: () => fetchOrderAnime(currentOrder),
   });
 
-  // Flatten all pages data
-  const allAnime = data?.pages.flatMap((page) => page.data) || [];
-  const totalPages = data?.pages[0]?.total_page || 0;
-  const currentPage = data?.pages.length || 0;
-
-  // Load more function
-  const loadMore = useCallback(() => {
-    if (!isFetchingNextPage && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
-
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: "100px" }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, loadMore]);
+  const allAnime = data?.data || [];
+  const totalItems = data?.total_items || 0;
+  const availableOrders = data?.available_orders || [];
 
   if (isLoading) {
     return (
@@ -112,17 +104,35 @@ const PopularPage = () => {
       <Navbar />
 
       {/* Hero Header */}
-      <div className="pt-20 pb-8 px-4 md:px-12 bg-gradient-to-b from-gray-900 to-black">
+      <div className="pt-20 pb-6 px-4 md:px-12 bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="w-8 h-8 text-red-600" />
             <h1 className="text-4xl md:text-5xl font-heading text-white">
-              POPULAR ANIME
+              BROWSE ANIME
             </h1>
           </div>
-          <p className="text-gray-400 text-lg">
-            {allAnime.length} anime loaded • Page {currentPage} of {totalPages}
+          <p className="text-gray-400 text-lg mb-6">
+            {totalItems} anime tersedia
           </p>
+
+          {/* Order Tabs */}
+          <div className="flex flex-wrap gap-2">
+            {availableOrders.map((orderOption) => (
+              <button
+                key={orderOption.order}
+                onClick={() => setCurrentOrder(orderOption.order)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentOrder === orderOption.order
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                {ORDER_ICONS[orderOption.order]}
+                {orderOption.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -145,16 +155,16 @@ const PopularPage = () => {
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Rank Badge for Top 10 */}
-                    {index < 10 && (
+                    {/* Rank Badge for Top 10 (only for popular order) */}
+                    {currentOrder === "popular" && index < 10 && (
                       <div className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-orange-600 to-red-600 px-2 py-1 rounded text-xs z-10">
                         <Flame className="w-3 h-3 text-yellow-300 fill-yellow-300" />
                         <span className="text-white font-bold">#{index + 1}</span>
                       </div>
                     )}
 
-                    {/* Rating Badge */}
-                    {anime.score && Number(anime.score) > 0 && index >= 10 && (
+                    {/* Rating Badge (for non-top-10 or non-popular) */}
+                    {anime.score && Number(anime.score) > 0 && (currentOrder !== "popular" || index >= 10) && (
                       <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs z-10">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                         <span className="text-white font-medium">
@@ -170,9 +180,19 @@ const PopularPage = () => {
                       </div>
                     )}
 
-                    {/* Score for Top 10 - Bottom */}
-                    {index < 10 && anime.score && Number(anime.score) > 0 && (
+                    {/* Views Badge - Bottom Left */}
+                    {anime.total_views && (
                       <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs z-10">
+                        <Eye className="w-3 h-3 text-gray-400" />
+                        <span className="text-gray-300 font-medium">
+                          {formatViews(anime.total_views)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Score for Top 10 (popular order) - Bottom Right */}
+                    {currentOrder === "popular" && index < 10 && anime.score && Number(anime.score) > 0 && (
+                      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs z-10">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                         <span className="text-white font-medium">
                           {Number(anime.score).toFixed(1)}
@@ -214,37 +234,6 @@ const PopularPage = () => {
               </Link>
             ))}
           </div>
-
-          {/* Load More Trigger / Loading Indicator */}
-          {hasNextPage && (
-            <div
-              ref={loadMoreRef}
-              className="flex justify-center items-center py-8 mt-4"
-            >
-              {isFetchingNextPage ? (
-                <div className="flex items-center gap-3 text-gray-400">
-                  <Loader2 className="w-6 h-6 animate-spin text-red-600" />
-                  <span>
-                    Loading page {currentPage + 1} of {totalPages}...
-                  </span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-8 h-8 rounded-full border-2 border-gray-700 border-t-red-600 animate-spin" />
-                  <span className="text-gray-500 text-sm">Scroll for more</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* End of Results */}
-          {!hasNextPage && allAnime.length > 0 && (
-            <div className="text-center py-8 mt-4">
-              <p className="text-gray-600 text-sm">
-                You&apos;ve reached the end • {allAnime.length} anime total
-              </p>
-            </div>
-          )}
 
           {/* Empty State */}
           {allAnime.length === 0 && !isLoading && (

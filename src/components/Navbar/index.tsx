@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Clock, TrendingUp, Heart, Calendar, Tv } from 'lucide-react';
+import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Heart, Calendar, Tv, Compass } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -36,11 +36,10 @@ const Navbar = () => {
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
+    { href: '/popular', label: 'Browse', icon: Compass },
     { href: '/genres', label: 'Genres', icon: Film },
     { href: '/type', label: 'Type', icon: Tv },
     { href: '/schedule', label: 'Schedule', icon: Calendar },
-    { href: '/latest', label: 'Latest', icon: Clock },
-    { href: '/popular', label: 'Popular', icon: TrendingUp },
     { href: '#', label: 'My List', icon: Heart },
   ];
 
