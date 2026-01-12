@@ -6,6 +6,7 @@ import axios from "axios";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import Footer from "@/components/Footer";
 import { Star, Play, Clock, Loader2 } from "lucide-react";
 
 interface Anime {
@@ -229,6 +230,9 @@ const LatestPage = () => {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import Footer from "@/components/Footer";
 import { Film, ChevronRight } from "lucide-react";
 
 interface Genre {
@@ -101,6 +102,9 @@ const GenresPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

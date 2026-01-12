@@ -6,6 +6,7 @@ import axios from "axios";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import Footer from "@/components/Footer";
 import { Star, Play, TrendingUp, Loader2, Flame } from "lucide-react";
 
 interface Anime {
@@ -253,6 +254,9 @@ const PopularPage = () => {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

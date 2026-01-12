@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { Star, Play, Search, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 interface Anime {
   detail_url: string;
@@ -204,6 +205,9 @@ const SearchPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

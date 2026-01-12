@@ -1,20 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 import 'swiper/css/effect-fade';
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
-import { X, Play, Info, Plus, Star, Calendar, Film, Clock } from "lucide-react";
+import Footer from "@/components/Footer";
+import { X, Play, Info, Plus, Star, Calendar, Film, Clock, Volume2, VolumeX } from "lucide-react";
+import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
 
 // create types for anime data
 interface Anime {
   link: string;
+  detail_url?: string;
+  slug?: string;
   img: string;
   alt: string;
   title: string;
@@ -44,19 +49,51 @@ async function fetchGenres() {
   return data;
 }
 
+// Helper to extract slug from anime object
+// Priority: slug field > extract from detail_url > extract from link
+function getAnimeSlug(anime: Anime): string {
+  // If slug field exists, use it directly
+  if (anime.slug) {
+    return anime.slug;
+  }
+  
+  // Try to extract from detail_url or link
+  const url = anime.detail_url || anime.link || '';
+  
+  // Remove query params and hash
+  const cleanUrl = url.split('?')[0].split('#')[0];
+  
+  // Get the last non-empty segment
+  const parts = cleanUrl.split('/').filter(Boolean);
+  const slug = parts[parts.length - 1] || '';
+  
+  return slug;
+}
+
 export default function Home() {
   const [popup, setPopup] = useState(true);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   
   const newAnime = useQuery({
     queryKey: ["new-anime"],
     queryFn: fetchNewAnime,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 
   const genres = useQuery({
     queryKey: ["genres"],
     queryFn: fetchGenres,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
+
+  // Handle slide change to track active slide
+  const handleSlideChange = useCallback((swiper: SwiperType) => {
+    setActiveSlideIndex(swiper.realIndex);
+  }, []);
 
   if (newAnime.isLoading)
     return (
@@ -68,7 +105,26 @@ export default function Home() {
       </div>
     );
     
-  if (newAnime.error) return <div>Error: {(newAnime.error as Error).message}</div>;
+  if (newAnime.error) {
+    return (
+      <div className="min-h-screen bg-black">
+        <Navbar />
+        <div className="flex flex-col justify-center items-center h-[80vh] px-4">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h1 className="text-white text-2xl font-heading mb-2">Oops! Something went wrong</h1>
+          <p className="text-gray-400 text-center mb-6">
+            {(newAnime.error as Error).message}
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black min-h-screen">
@@ -86,95 +142,136 @@ export default function Home() {
           }}
           effect="fade"
           fadeEffect={{ crossFade: true }}
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          autoplay={{ delay: 8000, disableOnInteraction: false }}
           loop
           spaceBetween={0}
           slidesPerView={1}
           className="hero-swiper"
+          onSlideChange={handleSlideChange}
         >
-          {newAnime.data.data.slice(0, 8).map((anime: Anime, index: number) => (
-            <SwiperSlide key={index}>
-              <div className="relative h-[70vh] md:h-[90vh] w-full overflow-hidden">
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                  <img
-                    src={anime.img}
-                    alt={anime.alt}
-                    className="object-cover w-full h-full transform scale-105"
-                  />
-                </div>
+          {newAnime.data.data.slice(0, 8).map((anime: Anime, index: number) => {
+            const slug = getAnimeSlug(anime);
+            const trailer = getTrailerBySlug(slug);
+            const isActiveSlide = activeSlideIndex === index;
+            const trailerUrl = trailer && isActiveSlide ? getYouTubeEmbedUrl(slug, { muted: isMuted }) : null;
 
-                {/* Gradient Overlays - Netflix Style */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
+            return (
+              <SwiperSlide key={index}>
+                <div className="relative h-[70vh] md:h-[90vh] w-full overflow-hidden">
+                  {/* Background - Video or Image */}
+                  {trailer && trailerUrl && isActiveSlide ? (
+                    <div className="absolute inset-0 w-full h-full">
+                      <iframe
+                        src={trailerUrl}
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] h-[300%] sm:w-[200%] sm:h-[200%] md:w-[180%] md:h-[180%] lg:w-[150%] lg:h-[150%] pointer-events-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={`${trailer.title || anime.title} Trailer`}
+                      />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0">
+                      <img
+                        src={anime.img}
+                        alt={anime.alt}
+                        className="object-cover w-full h-full transform scale-105"
+                      />
+                    </div>
+                  )}
 
-                {/* Content */}
-                <div className="absolute inset-0 flex items-center">
-                  <div className="px-8 md:px-16 max-w-3xl">
-                    {/* Badge */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded">
-                        NEW
-                      </span>
-                      {anime.score && Number(anime.score) > 0 && (
-                        <span className="text-gray-300 text-sm flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          {Number(anime.score).toFixed(1)}
+                  {/* Gradient Overlays - Netflix Style */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 z-10" />
+                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10" />
+
+                  {/* Content */}
+                  <div className="absolute inset-0 flex items-center z-20">
+                    <div className="px-4 sm:px-8 md:px-16 max-w-3xl">
+                      {/* Badge */}
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 md:mb-4">
+                        <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded">
+                          NEW
                         </span>
-                      )}
-                      {anime.type && (
-                        <span className="text-gray-400 text-sm">{anime.type}</span>
-                      )}
-                    </div>
+                        {anime.score && Number(anime.score) > 0 && (
+                          <span className="text-gray-300 text-xs sm:text-sm flex items-center gap-1">
+                            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
+                            {Number(anime.score).toFixed(1)}
+                          </span>
+                        )}
+                        {anime.type && (
+                          <span className="text-gray-400 text-xs sm:text-sm">{anime.type}</span>
+                        )}
+                        {trailer && (
+                          <span className="bg-purple-600 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded flex items-center gap-1">
+                            <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
+                            TRAILER
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Title */}
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-white mb-4 drop-shadow-2xl leading-tight">
-                      {anime.title}
-                    </h1>
+                      {/* Title */}
+                      <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-heading text-white mb-2 sm:mb-4 drop-shadow-2xl leading-tight">
+                        {anime.title}
+                      </h1>
 
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-3 mb-4 text-sm">
-                      <span className="text-green-500 font-semibold">98% Match</span>
-                      <span className="border border-gray-500 px-2 py-0.5 text-xs text-gray-300">HD</span>
-                      <span className="text-gray-400">{anime.released}</span>
-                      <span className="text-gray-400">{anime.episode}</span>
-                    </div>
+                      {/* Meta Info */}
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 md:mb-4 text-xs sm:text-sm">
+                        <span className="text-green-500 font-semibold">98% Match</span>
+                        <span className="border border-gray-500 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs text-gray-300">HD</span>
+                        <span className="text-gray-400 hidden sm:inline">{anime.released}</span>
+                        <span className="text-gray-400">{anime.episode}</span>
+                      </div>
 
-                    {/* Description placeholder */}
-                    <p className="text-gray-300 text-sm md:text-base mb-6 line-clamp-2 max-w-xl leading-relaxed hidden md:block">
-                      Watch the latest episode of {anime.title}. Stream now in HD quality on Animekudesu.
-                    </p>
+                      {/* Description placeholder */}
+                      <p className="text-gray-300 text-sm md:text-base mb-4 md:mb-6 line-clamp-2 max-w-xl leading-relaxed hidden md:block">
+                        Watch the latest episode of {anime.title}. Stream now in HD quality on Animekudesu.
+                      </p>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <Link href={anime.link}>
-                        <button className="bg-white hover:bg-gray-200 text-black font-semibold py-3 px-6 md:px-8 rounded flex items-center gap-2 transition-all transform hover:scale-105">
-                          <Play className="w-5 h-5 md:w-6 md:h-6 fill-black" />
-                          <span className="text-sm md:text-base">Play</span>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                        <Link href={anime.link}>
+                          <button className="bg-white hover:bg-gray-200 text-black font-semibold py-2 sm:py-3 px-4 sm:px-6 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all transform hover:scale-105">
+                            <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 fill-black" />
+                            <span className="text-xs sm:text-sm md:text-base">Play</span>
+                          </button>
+                        </Link>
+                        <button 
+                          onClick={() => setSelectedAnime(anime)}
+                          className="bg-gray-600/80 hover:bg-gray-600 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all"
+                        >
+                          <Info className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                          <span className="text-xs sm:text-sm md:text-base hidden sm:inline">More Info</span>
+                          <span className="text-xs sm:hidden">Info</span>
                         </button>
-                      </Link>
-                      <button 
-                        onClick={() => setSelectedAnime(anime)}
-                        className="bg-gray-600/80 hover:bg-gray-600 text-white font-semibold py-3 px-6 md:px-8 rounded flex items-center gap-2 transition-all"
-                      >
-                        <Info className="w-5 h-5 md:w-6 md:h-6" />
-                        <span className="text-sm md:text-base">More Info</span>
-                      </button>
-                      <button className="w-11 h-11 md:w-12 md:h-12 rounded-full border-2 border-gray-400 hover:border-white bg-black/30 hover:bg-black/50 flex items-center justify-center transition-all">
-                        <Plus className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                      </button>
+                        <button className="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full border border-gray-500 sm:border-2 sm:border-gray-400 hover:border-white bg-black/30 hover:bg-black/50 flex items-center justify-center transition-all">
+                          <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Slide Number Indicator */}
-                <div className="absolute bottom-8 right-8 md:right-16 flex items-center gap-2">
-                  <span className="text-5xl md:text-7xl font-heading text-white/20">{String(index + 1).padStart(2, '0')}</span>
+                  {/* Mute/Unmute Button for Video */}
+                  {trailer && isActiveSlide && (
+                    <button
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="absolute bottom-20 sm:bottom-24 right-4 sm:right-8 md:right-16 z-30 w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border border-gray-500 sm:border-2 sm:border-gray-400 hover:border-white bg-black/60 flex items-center justify-center transition-all"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+                      )}
+                    </button>
+                  )}
+
+                  {/* Slide Number Indicator */}
+                  <div className="absolute bottom-6 sm:bottom-8 right-4 sm:right-8 md:right-16 flex items-center gap-2 z-20">
+                    <span className="text-4xl sm:text-5xl md:text-7xl font-heading text-white/20">{String(index + 1).padStart(2, '0')}</span>
+                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
         {/* Bottom fade into content */}
@@ -182,17 +279,31 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col gap-4 my-4">
-        <ListItemHorizontal title="On Going Anime" apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" queryKey="on-going-anime" />
-        <ListItemHorizontal title="Completed Anime" apifetch="https://animekudesu-be.gatradigital.com/completed-anime" queryKey="completed-anime" />
+        <ListItemHorizontal 
+          title="On Going Anime" 
+          apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" 
+          queryKey="on-going-anime" 
+          categorySlug="ongoing"
+        />
+        <ListItemHorizontal 
+          title="Completed Anime" 
+          apifetch="https://animekudesu-be.gatradigital.com/completed-anime" 
+          queryKey="completed-anime" 
+          categorySlug="completed"
+        />
         {!genres.isLoading && genres.data.data.map((genre: Genres, index: number) => (
           <ListItemHorizontal
             key={index}
             title={genre.title}
             apifetch={`https://animekudesu-be.gatradigital.com/genre-anime/${genre.id}`}
             queryKey={`genre-${genre.id}`}
+            seeAllHref={`/genres/${genre.id}`}
           />
         ))}
       </div>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Banner Popup */}
       {popup && (

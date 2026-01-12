@@ -13,6 +13,8 @@ interface ListItemHorizontalProps {
   placeholder?: boolean;
   apifetch: string;
   queryKey?: string;
+  categorySlug?: string; // Slug for "See All" navigation (e.g., "ongoing", "completed")
+  seeAllHref?: string; // Full href for "See All" link (overrides categorySlug)
 }
 
 interface Anime {
@@ -31,7 +33,10 @@ interface Genre {
 }
 
 const ListItemHorizontal = (props: ListItemHorizontalProps) => {
-  const { title, placeholder, apifetch, queryKey } = props;
+  const { title, placeholder, apifetch, queryKey, categorySlug, seeAllHref } = props;
+  
+  // Determine the "See All" link
+  const seeAllLink = seeAllHref || (categorySlug ? `/category/${categorySlug}` : null);
 
   async function fetch() {
     const { data } = await axios.get(apifetch);
@@ -159,17 +164,19 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
         })}
         
         {/* See More Card */}
-        <SwiperSlide>
-          <Link href="#">
-            <div className="aspect-[2/3] rounded-md bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer group hover:from-gray-700 hover:to-gray-800 transition-all duration-300 border border-gray-800 hover:border-red-600/50">
-              <div className="w-14 h-14 rounded-full border-2 border-gray-600 group-hover:border-red-600 flex items-center justify-center mb-3 transition-colors">
-                <ChevronRight className="w-7 h-7 text-gray-400 group-hover:text-red-600 transition-colors" />
+        {seeAllLink && (
+          <SwiperSlide>
+            <Link href={seeAllLink}>
+              <div className="aspect-[2/3] rounded-md bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center cursor-pointer group hover:from-gray-700 hover:to-gray-800 transition-all duration-300 border border-gray-800 hover:border-red-600/50">
+                <div className="w-14 h-14 rounded-full border-2 border-gray-600 group-hover:border-red-600 flex items-center justify-center mb-3 transition-colors">
+                  <ChevronRight className="w-7 h-7 text-gray-400 group-hover:text-red-600 transition-colors" />
+                </div>
+                <p className="text-gray-400 group-hover:text-white text-sm font-medium transition-colors">See All</p>
+                <p className="text-gray-600 text-xs mt-1 text-center px-2">{title}</p>
               </div>
-              <p className="text-gray-400 group-hover:text-white text-sm font-medium transition-colors">See All</p>
-              <p className="text-gray-600 text-xs mt-1">{title}</p>
-            </div>
-          </Link>
-        </SwiperSlide>
+            </Link>
+          </SwiperSlide>
+        )}
       </Swiper>
     </div>
   );

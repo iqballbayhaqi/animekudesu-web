@@ -6,6 +6,7 @@ import axios from "axios";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import Footer from "@/components/Footer";
 import { Star, Play, ArrowLeft, Loader2 } from "lucide-react";
 
 interface Anime {
@@ -223,6 +224,9 @@ const GenreDetailPage = (props: GenrePageProps) => {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
