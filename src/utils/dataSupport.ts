@@ -1,5 +1,10 @@
 const dataSupport = [
   {
+    slug: 'one-piece',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/One_Piece_anime_logo.svg/1200px-One_Piece_anime_logo.svg.png',
+    landscape: 'https://wallpapercave.com/wp/wp8825328.jpg'
+  },
+  {
     slug: 'teogonia',
     logo: 'https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480/CurationAssets/Teogonia/SEASON%201/ULTRA-WIDE/Teogonia-S1-KV1-UW-Logo.png',
     landscape: 'https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=cover,format=auto,quality=85,width=1920/keyart/GXJHM3GX8-backdrop_wide'
