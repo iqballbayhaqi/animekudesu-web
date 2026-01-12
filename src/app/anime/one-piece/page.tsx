@@ -655,7 +655,7 @@ const OnePiecePage = () => {
                   <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     <span>⚔️</span> Select Server
                   </h3>
-                  {Object.entries(groupByProvider(episodeDetails.videos)).map(
+                  {Object.entries(groupByProvider(episodeDetails.videos as never[])).map(
                     ([providerName, videos], index) => (
                       <div key={index} className="bg-[#0d2137]/50 rounded-lg p-4 border border-sky-500/20">
                         <h4 className="text-xs sm:text-sm font-medium text-sky-400 mb-3 uppercase tracking-wider">
