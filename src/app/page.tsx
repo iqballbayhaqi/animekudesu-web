@@ -11,6 +11,7 @@ import 'swiper/css/effect-fade';
 import Link from "next/link";
 import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
+import TypeAnimeList from "@/components/TypeAnimeList";
 import Footer from "@/components/Footer";
 import { X, Play, Info, Plus, Star, Calendar, Film, Clock, Volume2, VolumeX } from "lucide-react";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
@@ -291,15 +292,76 @@ export default function Home() {
           queryKey="completed-anime" 
           categorySlug="completed"
         />
-        {!genres.isLoading && genres.data.data.map((genre: Genres, index: number) => (
-          <ListItemHorizontal
-            key={index}
-            title={genre.title}
-            apifetch={`https://animekudesu-be.gatradigital.com/genre-anime/${genre.id}`}
-            queryKey={`genre-${genre.id}`}
-            seeAllHref={`/genres/${genre.id}`}
-          />
-        ))}
+        
+      </div>
+      
+      {/* Mixed Genre & Type Anime Sections */}
+      <div className="flex flex-col gap-4 my-4">
+        {!genres.isLoading && (() => {
+          const genreList = genres.data.data;
+          const typeAnimeConfigs = [
+            { title: "TV Series", typeValue: "tv" as const, queryKey: "type-tv" },
+            { title: "OVA", typeValue: "ova" as const, queryKey: "type-ova" },
+            { title: "ONA", typeValue: "ona" as const, queryKey: "type-ona" },
+            { title: "Special", typeValue: "special" as const, queryKey: "type-special" },
+            { title: "Movie", typeValue: "movie" as const, queryKey: "type-movie" },
+          ];
+          
+          // Calculate interval to distribute type sections evenly among genres
+          const totalGenres = genreList.length;
+          const interval = Math.floor(totalGenres / (typeAnimeConfigs.length + 1));
+          
+          // Track which type section to insert next
+          let typeIndex = 0;
+          const elements: React.ReactNode[] = [];
+          
+          genreList.forEach((genre: Genres, index: number) => {
+            // Add genre section
+            elements.push(
+              <ListItemHorizontal
+                key={`genre-${index}`}
+                title={genre.title}
+                apifetch={`https://animekudesu-be.gatradigital.com/genre-anime/${genre.id}`}
+                queryKey={`genre-${genre.id}`}
+                seeAllHref={`/genres/${genre.id}`}
+              />
+            );
+            
+            // Check if we should insert a type section after this genre
+            if (typeIndex < typeAnimeConfigs.length && (index + 1) % interval === 0 && index !== totalGenres - 1) {
+              const typeConfig = typeAnimeConfigs[typeIndex];
+              elements.push(
+                <TypeAnimeList
+                  key={`type-${typeConfig.typeValue}`}
+                  title={typeConfig.title}
+                  typeValue={typeConfig.typeValue}
+                  apifetch={`https://animekudesu-be.gatradigital.com/type-anime/${typeConfig.typeValue}`}
+                  queryKey={typeConfig.queryKey}
+                  seeAllHref={`/type/${typeConfig.typeValue}`}
+                />
+              );
+              typeIndex++;
+            }
+          });
+          
+          // Add remaining type sections at the end if any
+          while (typeIndex < typeAnimeConfigs.length) {
+            const typeConfig = typeAnimeConfigs[typeIndex];
+            elements.push(
+              <TypeAnimeList
+                key={`type-${typeConfig.typeValue}`}
+                title={typeConfig.title}
+                typeValue={typeConfig.typeValue}
+                apifetch={`https://animekudesu-be.gatradigital.com/type-anime/${typeConfig.typeValue}`}
+                queryKey={typeConfig.queryKey}
+                seeAllHref={`/type/${typeConfig.typeValue}`}
+              />
+            );
+            typeIndex++;
+          }
+          
+          return elements;
+        })()}
       </div>
 
       {/* Footer */}
