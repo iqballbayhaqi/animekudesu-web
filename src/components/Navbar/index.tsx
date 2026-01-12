@@ -101,7 +101,7 @@ const Navbar = () => {
     { href: '/genres', label: 'Genres', icon: Film },
     { href: '/type', label: 'Type', icon: Tv },
     { href: '/schedule', label: 'Schedule', icon: Calendar },
-    { href: '#', label: 'My List', icon: Heart },
+    { href: '/profile', label: 'My List', icon: Heart },
   ];
 
   const isActiveLink = (href: string) => {
@@ -239,14 +239,14 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-            <button className='hidden md:block text-white hover:text-gray-300 transition-colors'>
+            <Link href="/profile" className='hidden md:block text-white hover:text-gray-300 transition-colors'>
               <Bookmark className='w-5 h-5' />
-            </button>
-            <button className='hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity'>
+            </Link>
+            <Link href="/profile" className='hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity'>
               <div className='w-8 h-8 rounded bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center'>
                 <UserRound className='w-5 h-5 text-white' />
               </div>
-            </button>
+            </Link>
             
             {/* Hamburger Button - Mobile Only */}
             <button 
@@ -341,25 +341,28 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <button className='flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all w-full'>
+              <Link 
+                href="/profile"
+                className='flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all w-full'
+              >
                 <Bookmark className='w-5 h-5' />
-                <span className='font-medium'>Bookmarks</span>
-              </button>
+                <span className='font-medium'>My List</span>
+              </Link>
             </li>
           </ul>
         </div>
 
         {/* User Profile Section */}
         <div className='absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-900'>
-          <button className='flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-gray-800 transition-all'>
+          <Link href="/profile" className='flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-gray-800 transition-all'>
             <div className='w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center'>
               <UserRound className='w-6 h-6 text-white' />
             </div>
             <div className='text-left'>
               <p className='text-white font-medium'>Guest User</p>
-              <p className='text-gray-500 text-sm'>Sign in to your account</p>
+              <p className='text-gray-500 text-sm'>Lihat Profile & My List</p>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </>

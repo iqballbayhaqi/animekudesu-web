@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
@@ -13,8 +13,9 @@ import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
 import TypeAnimeList from "@/components/TypeAnimeList";
 import Footer from "@/components/Footer";
-import { X, Play, Info, Plus, Star, Calendar, Film, Clock, Volume2, VolumeX } from "lucide-react";
+import { X, Play, Info, Plus, Check, Star, Calendar, Film, Clock, Volume2, VolumeX } from "lucide-react";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
+import { isInMyList, toggleMyList, getMyList } from "@/utils/myList";
 
 // create types for anime data
 interface Anime {
@@ -76,6 +77,36 @@ export default function Home() {
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [myListLinks, setMyListLinks] = useState<string[]>([]);
+  
+  // Load My List from localStorage on mount
+  useEffect(() => {
+    const loadMyList = () => {
+      const list = getMyList();
+      setMyListLinks(list.map(item => item.link));
+    };
+    
+    loadMyList();
+    
+    // Listen for my list updates
+    const handleUpdate = () => loadMyList();
+    window.addEventListener('mylist-updated', handleUpdate);
+    return () => window.removeEventListener('mylist-updated', handleUpdate);
+  }, []);
+
+  // Handle add/remove from My List
+  const handleToggleMyList = useCallback((anime: Anime) => {
+    toggleMyList({
+      link: anime.link,
+      img: anime.img,
+      alt: anime.alt,
+      title: anime.title,
+      episode: anime.episode,
+      released: anime.released,
+      type: anime.type,
+      score: anime.score,
+    });
+  }, []);
   
   const newAnime = useQuery({
     queryKey: ["new-anime"],
@@ -244,8 +275,20 @@ export default function Home() {
                           <span className="text-xs sm:text-sm md:text-base hidden sm:inline">More Info</span>
                           <span className="text-xs sm:hidden">Info</span>
                         </button>
-                        <button className="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full border border-gray-500 sm:border-2 sm:border-gray-400 hover:border-white bg-black/30 hover:bg-black/50 flex items-center justify-center transition-all">
-                          <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+                        <button 
+                          onClick={() => handleToggleMyList(anime)}
+                          className={`w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full border sm:border-2 flex items-center justify-center transition-all ${
+                            myListLinks.includes(anime.link)
+                              ? 'border-green-500 bg-green-500/30 hover:bg-green-500/50'
+                              : 'border-gray-500 sm:border-gray-400 hover:border-white bg-black/30 hover:bg-black/50'
+                          }`}
+                          title={myListLinks.includes(anime.link) ? 'Remove from My List' : 'Add to My List'}
+                        >
+                          {myListLinks.includes(anime.link) ? (
+                            <Check className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-500" />
+                          ) : (
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -430,8 +473,20 @@ export default function Home() {
                       <span>Play</span>
                     </button>
                   </Link>
-                  <button className="w-10 h-10 rounded-full border-2 border-gray-400 hover:border-white bg-black/30 flex items-center justify-center transition-all">
-                    <Plus className="w-5 h-5 text-white" />
+                  <button 
+                    onClick={() => handleToggleMyList(selectedAnime)}
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                      myListLinks.includes(selectedAnime.link)
+                        ? 'border-green-500 bg-green-500/30 hover:bg-green-500/50'
+                        : 'border-gray-400 hover:border-white bg-black/30 hover:bg-black/50'
+                    }`}
+                    title={myListLinks.includes(selectedAnime.link) ? 'Remove from My List' : 'Add to My List'}
+                  >
+                    {myListLinks.includes(selectedAnime.link) ? (
+                      <Check className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Plus className="w-5 h-5 text-white" />
+                    )}
                   </button>
                 </div>
               </div>

@@ -120,6 +120,11 @@ const animeTrailers: AnimeTrailer[] = [
     slug: "majutsushi-kunon-wa-mieteiru",
     youtubeId: "9YNk_ntZ-Ws",
     title: "Majutsushi Kuno on wa Mieteiru",
+  },
+  {
+    slug: "spy-x-family-part-2",
+    youtubeId: "ZGVbFUFpbZ4",
+    title: "Spy x Family Part 2",
   }
 ];
 
