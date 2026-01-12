@@ -1,12 +1,38 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Heart, Calendar, Tv, Compass } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react'
+import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Heart, Calendar, Tv, Compass, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+
+interface NotificationAnime {
+  img: string;
+  alt: string;
+  slug: string;
+  type: string;
+  score: string;
+  title: string;
+  total_views: number;
+  description: string;
+  genres: { tag: string; link: string }[];
+  detail_url: string;
+}
+
+interface NotificationResponse {
+  data: NotificationAnime[];
+  total_items: number;
+  current_page: number;
+  total_page: number;
+}
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationAnime[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const notificationRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -20,7 +46,42 @@ const Navbar = () => {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsNotificationOpen(false);
   }, [pathname]);
+
+  // Fetch notifications when menu opens
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (isNotificationOpen && notifications.length === 0) {
+        setIsLoadingNotifications(true);
+        try {
+          const response = await fetch('https://animekudesu-be.gatradigital.com/order-anime/latest-update');
+          const data: NotificationResponse = await response.json();
+          setNotifications(data.data.slice(0, 10)); // Show only 10 latest
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error);
+        } finally {
+          setIsLoadingNotifications(false);
+        }
+      }
+    };
+    fetchNotifications();
+  }, [isNotificationOpen, notifications.length]);
+
+  // Close notification menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    if (isNotificationOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationOpen]);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -89,10 +150,95 @@ const Navbar = () => {
             <Link href="/search" className='text-white hover:text-gray-300 transition-colors'>
               <Search className='w-5 h-5' />
             </Link>
-            <button className='hidden md:block text-white hover:text-gray-300 transition-colors relative'>
-              <Bell className='w-5 h-5' />
-              <span className='absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full'></span>
-            </button>
+            {/* Notification Button & Menu */}
+            <div className='hidden md:block relative' ref={notificationRef}>
+              <button 
+                onClick={() => {
+                  setIsNotificationOpen(!isNotificationOpen);
+                  if (!isNotificationOpen) setHasNewNotifications(false);
+                }}
+                className='text-white hover:text-gray-300 transition-colors relative'
+              >
+                <Bell className='w-5 h-5' />
+                {hasNewNotifications && (
+                  <span className='absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full animate-pulse'></span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {isNotificationOpen && (
+                <div className='absolute right-0 top-full mt-3 w-96 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50'>
+                  {/* Header */}
+                  <div className='flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900/95'>
+                    <h3 className='text-white font-semibold flex items-center gap-2'>
+                      <Bell className='w-4 h-4 text-red-500' />
+                      Update Terbaru
+                    </h3>
+                    <Link 
+                      href="/latest" 
+                      className='text-xs text-red-500 hover:text-red-400 transition-colors'
+                      onClick={() => setIsNotificationOpen(false)}
+                    >
+                      Lihat Semua
+                    </Link>
+                  </div>
+
+                  {/* Notification List */}
+                  <div className='max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900'>
+                    {isLoadingNotifications ? (
+                      <div className='flex items-center justify-center py-12'>
+                        <Loader2 className='w-6 h-6 text-red-500 animate-spin' />
+                      </div>
+                    ) : notifications.length > 0 ? (
+                      <div className='divide-y divide-gray-800'>
+                        {notifications.map((anime, index) => (
+                          <Link
+                            key={index}
+                            href={`/anime${anime.detail_url.replace('/detail-anime', '')}`}
+                            onClick={() => setIsNotificationOpen(false)}
+                            className='flex gap-3 p-3 hover:bg-gray-800/50 transition-colors group'
+                          >
+                            <div className='relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden'>
+                              <Image
+                                src={anime.img}
+                                alt={anime.alt || anime.title}
+                                fill
+                                className='object-cover group-hover:scale-105 transition-transform'
+                                sizes='56px'
+                              />
+                              {anime.type && (
+                                <span className='absolute top-1 left-1 text-[8px] px-1 py-0.5 bg-red-600 text-white rounded font-medium'>
+                                  {anime.type}
+                                </span>
+                              )}
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                              <h4 className='text-sm font-medium text-white line-clamp-2 group-hover:text-red-400 transition-colors'>
+                                {anime.title}
+                              </h4>
+                              <p className='text-xs text-gray-400 line-clamp-2 mt-1'>
+                                {anime.description}
+                              </p>
+                              {anime.score && (
+                                <div className='flex items-center gap-1 mt-1'>
+                                  <span className='text-yellow-500 text-xs'>★</span>
+                                  <span className='text-xs text-gray-400'>{anime.score}</span>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
+                        <Bell className='w-8 h-8 mb-2' />
+                        <p className='text-sm'>Tidak ada notifikasi</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button className='hidden md:block text-white hover:text-gray-300 transition-colors'>
               <Bookmark className='w-5 h-5' />
             </button>
@@ -183,11 +329,16 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <button className='flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all w-full'>
+              <Link 
+                href="/latest"
+                className='flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all w-full'
+              >
                 <Bell className='w-5 h-5' />
-                <span className='font-medium'>Notifications</span>
-                <span className='ml-auto w-2 h-2 bg-red-600 rounded-full'></span>
-              </button>
+                <span className='font-medium'>Update Terbaru</span>
+                {hasNewNotifications && (
+                  <span className='ml-auto w-2 h-2 bg-red-600 rounded-full animate-pulse'></span>
+                )}
+              </Link>
             </li>
             <li>
               <button className='flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all w-full'>
