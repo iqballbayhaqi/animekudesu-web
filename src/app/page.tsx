@@ -285,12 +285,14 @@ export default function Home() {
           apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" 
           queryKey="on-going-anime" 
           categorySlug="ongoing"
+          variant="ongoing"
         />
         <ListItemHorizontal 
           title="Completed Anime" 
           apifetch="https://animekudesu-be.gatradigital.com/completed-anime" 
           queryKey="completed-anime" 
           categorySlug="completed"
+          variant="completed"
         />
         
       </div>

@@ -2,7 +2,7 @@
 "use client";
 import React from "react";
 import axios from "axios";
-import { Star, Play, Plus, ChevronRight } from "lucide-react";
+import { Star, Play, Plus, ChevronRight, Radio, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
@@ -15,6 +15,7 @@ interface ListItemHorizontalProps {
   queryKey?: string;
   categorySlug?: string; // Slug for "See All" navigation (e.g., "ongoing", "completed")
   seeAllHref?: string; // Full href for "See All" link (overrides categorySlug)
+  variant?: "default" | "ongoing" | "completed"; // Header style variant
 }
 
 interface Anime {
@@ -32,8 +33,30 @@ interface Genre {
   tag: string;
 }
 
+const VARIANT_CONFIG = {
+  default: {
+    icon: null,
+    color: "text-white",
+    badgeColor: "",
+    badgeText: "",
+  },
+  ongoing: {
+    icon: <Radio className="w-5 h-5" />,
+    color: "text-green-400",
+    badgeColor: "bg-green-600",
+    badgeText: "LIVE",
+  },
+  completed: {
+    icon: <CheckCircle className="w-5 h-5" />,
+    color: "text-blue-400",
+    badgeColor: "bg-blue-600",
+    badgeText: "END",
+  },
+};
+
 const ListItemHorizontal = (props: ListItemHorizontalProps) => {
-  const { title, placeholder, apifetch, queryKey, categorySlug, seeAllHref } = props;
+  const { title, placeholder, apifetch, queryKey, categorySlug, seeAllHref, variant = "default" } = props;
+  const config = VARIANT_CONFIG[variant];
   
   // Determine the "See All" link
   const seeAllLink = seeAllHref || (categorySlug ? `/category/${categorySlug}` : null);
@@ -52,8 +75,18 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
     <div className="w-full px-4 md:px-8 lg:px-12">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl md:text-2xl font-heading text-white tracking-wide flex items-center gap-2 group cursor-pointer">
+        <h2 className={`text-xl md:text-2xl font-heading tracking-wide flex items-center gap-2 group cursor-pointer ${config.color}`}>
+          {config.icon && (
+            <span className={`${variant === 'ongoing' ? 'animate-pulse' : ''}`}>
+              {config.icon}
+            </span>
+          )}
           {title}
+          {config.badgeText && (
+            <span className={`${config.badgeColor} text-white text-[10px] px-2 py-0.5 rounded font-bold ml-1`}>
+              {config.badgeText}
+            </span>
+          )}
           <ChevronRight className="w-5 h-5 text-red-600 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all" />
         </h2>
       </div>
@@ -115,7 +148,7 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
                       
                       {/* Type Badge */}
                       {anime.type && (
-                        <div className="absolute top-2 right-2 bg-red-600 px-2 py-0.5 rounded text-xs font-bold text-white z-10">
+                        <div className={`absolute top-2 right-2 ${variant === 'ongoing' ? 'bg-green-600' : variant === 'completed' ? 'bg-blue-600' : 'bg-red-600'} px-2 py-0.5 rounded text-xs font-bold text-white z-10`}>
                           {anime.type}
                         </div>
                       )}
