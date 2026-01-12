@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Clock, TrendingUp, Heart } from 'lucide-react';
+import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Clock, TrendingUp, Heart, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -37,6 +37,7 @@ const Navbar = () => {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/genres', label: 'Genres', icon: Film },
+    { href: '/schedule', label: 'Schedule', icon: Calendar },
     { href: '/latest', label: 'Latest', icon: Clock },
     { href: '/popular', label: 'Popular', icon: TrendingUp },
     { href: '#', label: 'My List', icon: Heart },

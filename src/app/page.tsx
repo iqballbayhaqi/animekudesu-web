@@ -142,7 +142,7 @@ export default function Home() {
           }}
           effect="fade"
           fadeEffect={{ crossFade: true }}
-          autoplay={{ delay: 8000, disableOnInteraction: false }}
+          autoplay={{ delay: 60000, disableOnInteraction: false }}
           loop
           spaceBetween={0}
           slidesPerView={1}

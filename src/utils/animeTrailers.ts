@@ -100,6 +100,26 @@ const animeTrailers: AnimeTrailer[] = [
     slug: "goumon-baito-kun-no-nichijou",
     youtubeId: "adYllv555BE",
     title: "Goumon Baito-kun no Nichijou",
+  },
+  {
+    slug: "kizoku-tensei-megumareta-umare-kara-saikyou-no-chikara-wo-eru",
+    youtubeId: "-NocYI3Lwds",
+    title: "Kizoku Tensei Megumareta Umare Kara Saikyou no Chikara wo Eru",
+  },
+  {
+    slug: "vigilante-boku-no-hero-academia-illegals-season-2",
+    youtubeId: "i-8-xFFIOoM",
+    title: "Vigilante Boku no Hero Academia Illegals Season 2",
+  },
+  {
+    slug: "jigokuraku-season-2",
+    youtubeId: "7KnLE6ATZS0",
+    title: "Jigokuraku Season 2",
+  },
+  {
+    slug: "majutsushi-kunon-wa-mieteiru",
+    youtubeId: "9YNk_ntZ-Ws",
+    title: "Majutsushi Kuno on wa Mieteiru",
   }
 ];
 
