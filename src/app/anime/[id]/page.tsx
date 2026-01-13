@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { use, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -10,7 +11,7 @@ import EpisodeCard from "@/components/EpisodeCard";
 import Footer from "@/components/Footer";
 import dataSupport from "@/utils/dataSupport";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
-import { Play, Plus, Check, ThumbsUp, Info, Volume2, VolumeX, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Play, Plus, Check, ThumbsUp, Info, Volume2, VolumeX, X, ArrowUpDown, ArrowUp, ArrowDown, Server, Loader2, MonitorPlay, Film, Clock, Calendar } from "lucide-react";
 import { isInMyList, toggleMyList, isAnimeLiked, toggleLikeAnime } from "@/utils/myList";
 import groupByProvider from "@/utils/groupByProvider";
 
@@ -32,11 +33,15 @@ const Anime = (props: AnimePageProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [selectedVideoPath, setSelectedVideoPath] = useState<string | null>(null);
   const [episodeDetails, setEpisodeDetails] = useState<{
     videos: { id: string; title: string; video: string; type: string }[];
     title: string;
     description: string;
   } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // desc = newest first, asc = oldest first
   
   // Get trailer info from config
@@ -47,6 +52,10 @@ const Anime = (props: AnimePageProps) => {
     queryKey: ["detail-anime", id],
     queryFn: () => fetchAnimeDetail(id),
   });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Check if anime is in My List and Liked
   useEffect(() => {
@@ -102,13 +111,56 @@ const Anime = (props: AnimePageProps) => {
   // Fetch video URL
   const fetchVideoUrl = useCallback(async (videoPath: string) => {
     try {
+      setIsLoadingVideo(true);
+      setSelectedVideoPath(videoPath);
       const response = await fetch(`https://animekudesu-be.gatradigital.com${videoPath}`);
       const videoData = await response.json();
       setVideoUrl(videoData.url);
     } catch (error) {
       console.error('Failed to fetch video:', error);
+    } finally {
+      setIsLoadingVideo(false);
     }
   }, []);
+
+  // Close modal handler
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+    setTimeout(() => {
+      setShowPlayer(false);
+      setVideoUrl(null);
+      setEpisodeDetails(null);
+      setSelectedVideoPath(null);
+    }, 200);
+  }, []);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPlayer) {
+        closeModal();
+      }
+    };
+    
+    if (showPlayer) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [showPlayer, closeModal]);
+
+  // Animate modal in
+  useEffect(() => {
+    if (showPlayer) {
+      requestAnimationFrame(() => {
+        setShowModal(true);
+      });
+    }
+  }, [showPlayer]);
 
   // Play latest episode
   const handlePlayLatest = useCallback(async () => {
@@ -130,7 +182,9 @@ const Anime = (props: AnimePageProps) => {
       
       // Auto-play first video
       if (response.data.videos && response.data.videos.length > 0) {
-        fetchVideoUrl(response.data.videos[0].video);
+        const firstVideoPath = response.data.videos[0].video;
+        setSelectedVideoPath(firstVideoPath);
+        fetchVideoUrl(firstVideoPath);
       }
     } catch (error) {
       console.error('Failed to fetch episode:', error);
@@ -254,13 +308,24 @@ const Anime = (props: AnimePageProps) => {
               
               {/* Action Buttons - compact on mobile */}
               <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                <button 
-                  onClick={handlePlayLatest}
-                  className="bg-white hover:bg-gray-200 text-black font-semibold py-1.5 px-3 sm:py-2 sm:px-4 md:py-3 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all text-xs sm:text-sm md:text-base"
-                >
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 fill-black" />
-                  <span>Play</span>
-                </button>
+                {data.episodes && data.episodes.length > 0 ? (
+                  <button 
+                    onClick={handlePlayLatest}
+                    className="bg-white hover:bg-gray-200 text-black font-semibold py-1.5 px-3 sm:py-2 sm:px-4 md:py-3 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all text-xs sm:text-sm md:text-base"
+                  >
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 fill-black" />
+                    <span>Play</span>
+                  </button>
+                ) : (
+                  <button 
+                    disabled
+                    className="bg-gray-600 text-gray-400 font-semibold py-1.5 px-3 sm:py-2 sm:px-4 md:py-3 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base cursor-not-allowed"
+                    title="Belum ada episode tersedia"
+                  >
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 fill-gray-400" />
+                    <span>Coming Soon</span>
+                  </button>
+                )}
                 <button 
                   onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })}
                   className="bg-gray-600/80 hover:bg-gray-600 text-white font-semibold py-1.5 px-3 sm:py-2 sm:px-4 md:py-3 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all text-xs sm:text-sm md:text-base"
@@ -304,58 +369,81 @@ const Anime = (props: AnimePageProps) => {
       {/* Episode Section */}
       <section className="relative z-10 pb-8 md:pb-16 bg-black">
         <div className="px-4 sm:px-6 md:px-16">
-{/* Section Header */}
+          {/* Section Header */}
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-heading tracking-wide">EPISODES</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-400">{data.episodes.length} Episodes</span>
-              {/* Sort Toggle Button */}
-              <button
-                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-xs sm:text-sm"
-                title={sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
-              >
-                {sortOrder === 'desc' ? (
-                  <>
-                    <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Terbaru</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Terlama</span>
-                  </>
-                )}
-              </button>
-            </div>
+            {data.episodes && data.episodes.length > 0 && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs sm:text-sm text-gray-400">{data.episodes.length} Episodes</span>
+                {/* Sort Toggle Button */}
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                  className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-xs sm:text-sm"
+                  title={sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+                >
+                  {sortOrder === 'desc' ? (
+                    <>
+                      <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Terbaru</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Terlama</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Episode Grid - 2 columns on mobile */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-            {(sortOrder === 'desc' 
-              ? data.episodes.slice().reverse() 
-              : data.episodes.slice()
-            ).map(
-                (
-                  episode: {
-                    episode: number;
-                    title: string;
-                    description: string;
-                    detail_eps: string;
-                  },
-                  index: number
-                ) => (
-                  <EpisodeCard
-                    key={index}
-                    episodeNumber={episode.episode}
-                    title={episode.title}
-                    description={episode.description}
-                    img={data.img}
-                    detail_eps={episode.detail_eps}
-                  />
-                )
-              )}
-          </div>
+          {/* Episode Grid or Empty State */}
+          {data.episodes && data.episodes.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+              {(sortOrder === 'desc' 
+                ? data.episodes.slice().reverse() 
+                : data.episodes.slice()
+              ).map(
+                  (
+                    episode: {
+                      episode: number;
+                      title: string;
+                      description: string;
+                      detail_eps: string;
+                    },
+                    index: number
+                  ) => (
+                    <EpisodeCard
+                      key={index}
+                      episodeNumber={episode.episode}
+                      title={episode.title}
+                      description={episode.description}
+                      img={data.img}
+                      detail_eps={episode.detail_eps}
+                    />
+                  )
+                )}
+            </div>
+          ) : (
+            /* Empty State - No Episodes */
+            <div className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
+              <div className="relative mb-6">
+                {/* Background glow */}
+                <div className="absolute inset-0 bg-red-600/20 rounded-full blur-2xl scale-150" />
+                {/* Icon container */}
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 flex items-center justify-center">
+                  <Film className="w-10 h-10 sm:w-12 sm:h-12 text-gray-500" />
+                </div>
+              </div>
+              
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 text-center">
+                Belum Ada Episode
+              </h3>
+              <p className="text-gray-400 text-sm sm:text-base text-center max-w-md mb-6 px-4">
+                Episode untuk anime ini belum tersedia. Silakan cek kembali nanti atau lihat jadwal tayang.
+              </p>
+            </div>
+          )}
         </div>
         
         {/* More Details Section */}
@@ -420,76 +508,136 @@ const Anime = (props: AnimePageProps) => {
       <Footer />
 
       {/* Video Player Modal */}
-      {showPlayer && (
-        <div className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/90 z-[100] p-0 sm:p-4 overflow-y-auto scrollbar-modal">
-          <div className="relative bg-gray-900 sm:rounded-lg w-full max-w-4xl shadow-2xl max-h-full sm:max-h-[90vh] overflow-y-auto scrollbar-modal">
-            {/* Close Button */}
-            <button 
-              onClick={() => {
-                setShowPlayer(false);
-                setVideoUrl(null);
-                setEpisodeDetails(null);
-              }} 
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black flex items-center justify-center transition-colors"
+      {showPlayer && isMounted &&
+        createPortal(
+          <div 
+            className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto scrollbar-modal transition-all duration-200 ${
+              showModal ? 'bg-black/95 backdrop-blur-sm' : 'bg-transparent'
+            }`}
+            onClick={(e) => e.target === e.currentTarget && closeModal()}
+          >
+            <div 
+              className={`relative bg-gradient-to-b from-gray-900 to-gray-950 sm:rounded-2xl w-full max-w-5xl shadow-2xl max-h-full sm:max-h-[95vh] overflow-hidden transition-all duration-200 ${
+                showModal ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'
+              }`}
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            
-            {/* Video Player */}
-            <div className="relative aspect-video bg-black sm:rounded-t-lg overflow-hidden">
-              {videoUrl ? (
-                <iframe
-                  src={videoUrl}
-                  className="w-full h-full"
-                  allowFullScreen
-                  title="Video Player"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="animate-spin w-8 h-8 sm:w-10 sm:h-10 border-4 border-red-600 border-t-transparent rounded-full" />
+              {/* Header Bar */}
+              <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-3 sm:p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-600 text-white font-bold text-sm sm:text-base">
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-white font-semibold text-sm sm:text-base line-clamp-1">
+                      Now Playing
+                    </span>
+                    <span className="text-gray-400 text-[10px] sm:text-xs hidden sm:block">
+                      {episodeDetails?.title?.slice(0, 50)}...
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Episode Info */}
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-2xl font-heading text-white mb-1 sm:mb-2">
-                {episodeDetails?.title || 'Loading...'}
-              </h2>
-              <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 line-clamp-2 sm:line-clamp-none">
-                {episodeDetails?.description}
-              </p>
+                
+                {/* Close Button */}
+                <button 
+                  onClick={closeModal}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all hover:rotate-90 duration-200"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </button>
+              </div>
               
-              {/* Server Selection */}
-              {episodeDetails?.videos && (
-                <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-white">Select Server</h3>
-                  {Object.entries(groupByProvider(episodeDetails.videos)).map(
-                    ([providerName, videos], index) => (
-                      <div key={index} className="bg-gray-800/50 rounded-lg p-3 sm:p-4">
-                        <h4 className="text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
-                          {providerName}
-                        </h4>
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                          {videos.map((video: { video: string; title: string }, idx: number) => (
-                            <button
-                              key={idx}
-                              onClick={() => fetchVideoUrl(video.video)}
-                              className="bg-gray-700 hover:bg-red-600 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors"
-                            >
-                              {video.title}
-                            </button>
-                          ))}
-                        </div>
+              {/* Video Player */}
+              <div className="relative aspect-video bg-black overflow-hidden">
+                {videoUrl && !isLoadingVideo ? (
+                  <iframe
+                    src={videoUrl}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Video Player"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+                    <div className="relative">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/20 flex items-center justify-center">
+                        {isLoadingVideo ? (
+                          <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-spin" />
+                        ) : (
+                          <MonitorPlay className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
+                        )}
                       </div>
-                    )
-                  )}
+                      <div className="absolute inset-0 rounded-full border-2 border-red-600/30 animate-ping" />
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      {isLoadingVideo ? 'Loading video...' : 'Loading player...'}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Episode Info & Server Selection */}
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[40vh] sm:max-h-[35vh] scrollbar-modal">
+                {/* Episode Title & Description */}
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
+                    {episodeDetails?.title || 'Loading...'}
+                  </h2>
+                  <p className="text-gray-400 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3">
+                    {episodeDetails?.description}
+                  </p>
                 </div>
-              )}
+                
+                {/* Server Selection */}
+                {episodeDetails?.videos && (
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                      <h3 className="text-sm sm:text-base font-semibold text-white">Select Server</h3>
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      {Object.entries(groupByProvider(episodeDetails.videos)).map(
+                        ([providerName, videos], index) => (
+                          <div 
+                            key={index} 
+                            className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-3 sm:p-4 hover:border-gray-600/50 transition-colors"
+                          >
+                            <h4 className="text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 sm:mb-3 uppercase tracking-widest flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                              {providerName}
+                            </h4>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                              {videos.map((video: { video: string; title: string }, idx: number) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => fetchVideoUrl(video.video)}
+                                  disabled={isLoadingVideo}
+                                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                                    selectedVideoPath === video.video
+                                      ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                                      : 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white'
+                                  } ${isLoadingVideo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                  {selectedVideoPath === video.video && isLoadingVideo && (
+                                    <Loader2 className="w-3 h-3 animate-spin absolute left-1.5 top-1/2 -translate-y-1/2" />
+                                  )}
+                                  <span className={selectedVideoPath === video.video && isLoadingVideo ? 'ml-4' : ''}>
+                                    {video.title}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )
+      }
     </div>
   );
 };

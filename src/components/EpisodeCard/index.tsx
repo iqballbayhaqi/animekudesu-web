@@ -1,7 +1,8 @@
 "use client";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
-import { X, Play, Clock } from "lucide-react";
+import { X, Play, Clock, Server, Loader2, MonitorPlay } from "lucide-react";
 import groupByProvider from "@/utils/groupByProvider";
 
 interface EpisodeCardProps {
@@ -38,6 +39,10 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
   const [popup, setPopup] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [selectedVideoPath, setSelectedVideoPath] = useState<string | null>(null);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   async function fetchEpisodeDetails() {
     const { data } = await axios.get(
@@ -50,28 +55,76 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
 
   const fetchEpisodeDetailsOnTrigger = async () => {
     setEpisodeDetails(null);
+    setVideoUrl(null);
+    setSelectedVideoPath(null);
+    setPopup(true);
+    
     const data = await fetchEpisodeDetails();
-    console.log('data', data);
-    fetchEpisodeVideos(data.videos[0].video);
+    const firstVideoPath = data.videos?.[0]?.video;
+    if (firstVideoPath) {
+      fetchEpisodeVideos(firstVideoPath);
+    }
     setEpisodeDetails(data);
   };
 
   const fetchEpisodeVideos = async (video: string) => {
-    console.log('video', video);
+    setIsLoadingVideo(true);
+    setSelectedVideoPath(video);
     
+    try {
       const response = await fetch(
         `https://animekudesu-be.gatradigital.com${video}`
       );
       const data = await response.json();
       setVideoUrl(data.url);
+    } catch (error) {
+      console.error('Failed to load video:', error);
+    } finally {
+      setIsLoadingVideo(false);
+    }
   };
 
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+    setTimeout(() => {
+      setPopup(false);
+      setVideoUrl(null);
+      setEpisodeDetails(null);
+      setSelectedVideoPath(null);
+    }, 200);
+  }, []);
+
+  // Handle escape key
   useEffect(() => {
-    if (episodeDetails) {
-      setPopup(true);
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && popup) {
+        closeModal();
+      }
+    };
+    
+    if (popup) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
     }
     
-  }, [episodeDetails])
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [popup, closeModal]);
+
+  // Animate modal in
+  useEffect(() => {
+    if (popup) {
+      requestAnimationFrame(() => {
+        setShowModal(true);
+      });
+    }
+  }, [popup]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <Fragment>
@@ -124,66 +177,136 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
       </div>
 
       {/* Video Popup Modal */}
-      {popup && (
-        <div className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/90 z-[100] p-0 sm:p-4 overflow-y-auto scrollbar-modal">
-          <div className="relative bg-gray-900 sm:rounded-lg w-full max-w-4xl shadow-2xl max-h-full sm:max-h-[90vh] overflow-y-auto scrollbar-modal">
-            {/* Close Button */}
-            <button 
-              onClick={() => setPopup(false)} 
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black flex items-center justify-center transition-colors"
+      {popup && isMounted &&
+        createPortal(
+          <div 
+            className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto scrollbar-modal transition-all duration-200 ${
+              showModal ? 'bg-black/95 backdrop-blur-sm' : 'bg-transparent'
+            }`}
+            onClick={(e) => e.target === e.currentTarget && closeModal()}
+          >
+            <div 
+              className={`relative bg-gradient-to-b from-gray-900 to-gray-950 sm:rounded-2xl w-full max-w-5xl shadow-2xl max-h-full sm:max-h-[95vh] overflow-hidden transition-all duration-200 ${
+                showModal ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'
+              }`}
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            
-            {/* Video Player */}
-            <div className="relative aspect-video bg-black sm:rounded-t-lg overflow-hidden">
-              {videoUrl ? (
-                <iframe
-                  src={videoUrl}
-                  className="w-full h-full"
-                  allowFullScreen
-                  title="Video Player"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="animate-spin w-8 h-8 sm:w-10 sm:h-10 border-4 border-red-600 border-t-transparent rounded-full" />
+              {/* Header Bar */}
+              <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-3 sm:p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-600 text-white font-bold text-sm sm:text-base">
+                    {episodeNumber}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-white font-semibold text-sm sm:text-base line-clamp-1">
+                      Episode {episodeNumber}
+                    </span>
+                    <span className="text-gray-400 text-[10px] sm:text-xs hidden sm:block">
+                      {episodeDetails?.title?.slice(0, 50)}...
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Episode Info */}
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-2xl font-heading text-white mb-1 sm:mb-2">{episodeDetails?.title}</h2>
-              <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 line-clamp-2 sm:line-clamp-none">{episodeDetails?.description}</p>
+                
+                {/* Close Button */}
+                <button 
+                  onClick={closeModal}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all hover:rotate-90 duration-200"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </button>
+              </div>
               
-              {/* Server Selection */}
-              <div className="space-y-3 sm:space-y-4">
-                <h3 className="text-base sm:text-lg font-semibold text-white">Select Server</h3>
-                {Object.entries(groupByProvider(episodeDetails?.videos || [])).map(
-                  ([providerName, videos], index) => (
-                    <div key={index} className="bg-gray-800/50 rounded-lg p-3 sm:p-4">
-                      <h4 className="text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3 uppercase tracking-wider">
-                        {providerName}
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {videos.map((video, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => fetchEpisodeVideos(video.video)}
-                            className="bg-gray-700 hover:bg-red-600 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors"
-                          >
-                            {video.title}
-                          </button>
-                        ))}
+              {/* Video Player */}
+              <div className="relative aspect-video bg-black overflow-hidden">
+                {videoUrl && !isLoadingVideo ? (
+                  <iframe
+                    src={videoUrl}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Video Player"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+                    <div className="relative">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/20 flex items-center justify-center">
+                        {isLoadingVideo ? (
+                          <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-spin" />
+                        ) : (
+                          <MonitorPlay className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
+                        )}
                       </div>
+                      <div className="absolute inset-0 rounded-full border-2 border-red-600/30 animate-ping" />
                     </div>
-                  )
+                    <p className="text-gray-400 text-sm">
+                      {isLoadingVideo ? 'Loading video...' : 'Loading player...'}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Episode Info & Server Selection */}
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[40vh] sm:max-h-[35vh] scrollbar-modal">
+                {/* Episode Title & Description */}
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
+                    {episodeDetails?.title || 'Loading...'}
+                  </h2>
+                  <p className="text-gray-400 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3">
+                    {episodeDetails?.description}
+                  </p>
+                </div>
+                
+                {/* Server Selection */}
+                {episodeDetails?.videos && (
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                      <h3 className="text-sm sm:text-base font-semibold text-white">Select Server</h3>
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      {Object.entries(groupByProvider(episodeDetails.videos)).map(
+                        ([providerName, videos], index) => (
+                          <div 
+                            key={index} 
+                            className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-3 sm:p-4 hover:border-gray-600/50 transition-colors"
+                          >
+                            <h4 className="text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 sm:mb-3 uppercase tracking-widest flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                              {providerName}
+                            </h4>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                              {videos.map((video, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => fetchEpisodeVideos(video.video)}
+                                  disabled={isLoadingVideo}
+                                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                                    selectedVideoPath === video.video
+                                      ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                                      : 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white'
+                                  } ${isLoadingVideo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                  {selectedVideoPath === video.video && isLoadingVideo && (
+                                    <Loader2 className="w-3 h-3 animate-spin absolute left-1.5 top-1/2 -translate-y-1/2" />
+                                  )}
+                                  <span className={selectedVideoPath === video.video && isLoadingVideo ? 'ml-4' : ''}>
+                                    {video.title}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )
+      }
     </Fragment>
   );
 };

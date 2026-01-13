@@ -130,6 +130,101 @@ const animeTrailers: AnimeTrailer[] = [
     slug: "2-5-jigen-no-ririsa",
     youtubeId: "IbZ9-zGw1-8",
     title: "2.5 Jigen no Ririsa",
+  },
+  {
+    slug: "golden-kamuy-final-season",
+    youtubeId: "AXKRSJUZ3Mc",
+    title: "Golden Kamuy Final Season",
+  },
+  {
+    slug: "kaijuu-8-gou",
+    youtubeId: "V0OZWzTAqHg",
+    title: "Kaijuu 8 Gou",
+  },
+  {
+    slug: "kaijuu-8-gou-season-2",
+    youtubeId: "SXiSfXiiOxM",
+    title: "Kaijuu 8 Gou Season 2",
+  },
+  {
+    slug: "one-piece-live-action",
+    youtubeId: "Ades3pQbeh8",
+    title: "One Piece Live Action",
+  },
+  {
+    slug: "kimetsu-no-yaiba-mugen-ressha-hen-tv-series",
+    youtubeId: "ATJYac_dORw",
+    title: "Kimetsu no Yaiba Mugen Ressha-hen TV Series",
+  },
+  {
+    slug: "ao-no-miburo-season-2",
+    youtubeId: "7lNvO9z0lzg",
+    title: "Ao no Miburo Season 2",
+  },
+  {
+    slug: "one-punch-man-season-3",
+    youtubeId: "oh7bd-CDY6U",
+    title: "One Punch Man Season 3",
+  },
+  {
+    slug: "sakamoto-days-cour-2",
+    youtubeId: "PjksZ-iUdb8",
+    title: "Sakamoto Days Cour 2",
+  },
+  {
+    slug: "29-sai-dokushin-chuuken-boukensha-no-nichijou",
+    youtubeId: "pcM2QwkngME",
+    title: "29 Sai Dokushin Chuuken Boukensha no Nichijou",
+  },
+  {
+    slug: "champignon-no-majo",
+    youtubeId: "RRl_-gKSVok",
+    title: "Champignon no Majo",
+  },
+  {
+    slug: "chitose-kun-wa-ramune-bin-no-naka",
+    youtubeId: "ahnbKqceZ-A",
+    title: "Chitose-kun wa Ramune Bin no Naka",
+  },
+  {
+    slug: "darwin-jihen",
+    youtubeId: "Q8L2WW7TBVI",
+    title: "Darwin Jihen",
+  },
+  {
+    slug: "high-school-dxd",
+    youtubeId: "V05fvmoupkc",
+    title: "High School DxD",
+  },
+  {
+    slug: "high-school-dxd-born",
+    youtubeId: "t5t3RR4Dyx0",
+    title: "High School DxD Born",
+  },
+  {
+    slug: "high-school-dxd-hero",
+    youtubeId: "wrNvWEEHzTk",
+    title: "High School DxD Hero",
+  },
+  {
+    slug: "high-school-dxd-new",
+    youtubeId: "SJtjRnjDe64",
+    title: "High School DxD New",
+  },
+  {
+    slug: "mushoku-tensei-ii-isekai-ittara-honki-dasu",
+    youtubeId: "ts5NGoDI1V0",
+    title: "Mushoku Tensei II Isekai Ittara Honki Dasu",
+  },
+  {
+    slug: "ganbare-douki-chan",
+    youtubeId: "MljTGeffXCk",
+    title: "Ganbare Douki-chan",
+  },
+  {
+    slug: "shingeki-no-kyojin-ova",
+    youtubeId: "SXDtMa1-i5w",
+    title: "Shingeki no Kyojin OVA",
   }
 ];
 

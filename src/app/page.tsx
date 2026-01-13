@@ -13,9 +13,30 @@ import Loading from "@/components/Loading";
 import ListItemHorizontal from "@/components/ListItemHorizontal";
 import TypeAnimeList from "@/components/TypeAnimeList";
 import Footer from "@/components/Footer";
-import { X, Play, Info, Plus, Check, Star, Calendar, Film, Clock, Volume2, VolumeX } from "lucide-react";
+import { X, Play, Info, Plus, Check, Star, Calendar, Film, Clock, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
 import { isInMyList, toggleMyList, getMyList } from "@/utils/myList";
+
+// Check if banner should be shown (once per day)
+const BANNER_STORAGE_KEY = 'animekudesu_banner_last_shown';
+
+function shouldShowBanner(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const lastShown = localStorage.getItem(BANNER_STORAGE_KEY);
+  if (!lastShown) return true;
+  
+  const lastShownDate = new Date(lastShown);
+  const now = new Date();
+  const hoursSinceLastShown = (now.getTime() - lastShownDate.getTime()) / (1000 * 60 * 60);
+  
+  return hoursSinceLastShown >= 24;
+}
+
+function markBannerAsShown(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(BANNER_STORAGE_KEY, new Date().toISOString());
+}
 
 // create types for anime data
 interface Anime {
@@ -73,11 +94,36 @@ function getAnimeSlug(anime: Anime): string {
 }
 
 export default function Home() {
-  const [popup, setPopup] = useState(true);
+  const [popup, setPopup] = useState(false);
+  const [showPopupContent, setShowPopupContent] = useState(false);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [myListLinks, setMyListLinks] = useState<string[]>([]);
+  
+  // Check if banner should be shown (once per day)
+  useEffect(() => {
+    if (shouldShowBanner()) {
+      // Small delay before showing popup for better UX
+      const timer = setTimeout(() => {
+        setPopup(true);
+        // Trigger animation after popup is mounted
+        requestAnimationFrame(() => {
+          setShowPopupContent(true);
+        });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Handle closing the banner popup
+  const closeBannerPopup = useCallback(() => {
+    setShowPopupContent(false);
+    setTimeout(() => {
+      setPopup(false);
+      markBannerAsShown();
+    }, 300);
+  }, []);
   
   // Load My List from localStorage on mount
   useEffect(() => {
@@ -412,21 +458,85 @@ export default function Home() {
       {/* Footer */}
       <Footer />
 
-      {/* Banner Popup */}
+      {/* Banner Popup - Shows once per day */}
       {popup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50">
-          <div className="relative">
-            <img
-              src="/banner.png"
-              alt="Placeholder"
-              className="h-96"
-            />
-            <button 
-              onClick={() => setPopup(false)} 
-              className="absolute top-[-15px] right-[-15px] bg-gray-900 rounded-full p-2 hover:bg-gray-800 transition duration-300"
-            >
-              <X />
-            </button>
+        <div 
+          className={`fixed inset-0 flex items-center justify-center z-[9999] p-4 transition-all duration-300 ${
+            showPopupContent ? 'bg-black/90 backdrop-blur-md' : 'bg-transparent'
+          }`}
+          onClick={closeBannerPopup}
+        >
+          <div 
+            className={`relative max-w-lg w-full transition-all duration-300 ${
+              showPopupContent 
+                ? 'opacity-100 scale-100 translate-y-0' 
+                : 'opacity-0 scale-90 translate-y-8'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Glow Effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-red-600 rounded-2xl blur-lg opacity-50 animate-pulse" />
+            
+            {/* Main Card */}
+            <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50">
+              {/* Header Badge */}
+              <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>PENGUMUMAN</span>
+                </div>
+              </div>
+              
+              {/* Close Button */}
+              <button 
+                onClick={closeBannerPopup}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-sm flex items-center justify-center transition-all hover:rotate-90 duration-200 border border-white/20"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+              
+              {/* Banner Image */}
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden">
+                <img
+                  src="/banner.png"
+                  alt="Animekudesu Banner"
+                  className="w-full h-full object-cover"
+                />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+              </div>
+              
+              {/* Content */}
+              <div className="p-5 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  Selamat Datang di Animekudesu! 🎉
+                </h3>
+                <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                  Nikmati streaming anime favorit kamu dengan kualitas terbaik. 
+                  Update episode terbaru setiap hari!
+                </p>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <button 
+                    onClick={closeBannerPopup}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-600/30"
+                  >
+                    <Play className="w-4 h-4 fill-white" />
+                    <span>Mulai Nonton</span>
+                  </button>
+                  <button 
+                    onClick={closeBannerPopup}
+                    className="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white font-medium py-2.5 px-4 rounded-lg transition-all border border-gray-600/50"
+                  >
+                    Nanti Saja
+                  </button>
+                </div>
+              </div>
+              
+              {/* Bottom Decoration */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-purple-600 to-red-600" />
+            </div>
           </div>
         </div>
       )}
