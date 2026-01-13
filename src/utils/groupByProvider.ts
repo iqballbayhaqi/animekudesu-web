@@ -8,10 +8,16 @@ type PlayerOption = {
   video: string;
 };
 
-type GroupedPlayerOptions = Record<string, PlayerOption[]>;
+// Minimal type for grouping - only requires title which is what we use
+type VideoOption = {
+  title: string;
+  [key: string]: any; // Allow other properties
+};
 
-function groupByProvider(options: PlayerOption[]): GroupedPlayerOptions {
-  const result: GroupedPlayerOptions = {};
+type GroupedPlayerOptions<T extends VideoOption = VideoOption> = Record<string, T[]>;
+
+function groupByProvider<T extends VideoOption>(options: T[]): GroupedPlayerOptions<T> {
+  const result: GroupedPlayerOptions<T> = {} as GroupedPlayerOptions<T>;
 
   options.forEach((option) => {
     const provider = option.title.split(" ")[0];
