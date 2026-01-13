@@ -125,6 +125,11 @@ const animeTrailers: AnimeTrailer[] = [
     slug: "spy-x-family-part-2",
     youtubeId: "ZGVbFUFpbZ4",
     title: "Spy x Family Part 2",
+  },
+  {
+    slug: "2-5-jigen-no-ririsa",
+    youtubeId: "IbZ9-zGw1-8",
+    title: "2.5 Jigen no Ririsa",
   }
 ];
 
