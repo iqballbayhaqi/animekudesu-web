@@ -11,7 +11,7 @@ import EpisodeCard from "@/components/EpisodeCard";
 import Footer from "@/components/Footer";
 import dataSupport from "@/utils/dataSupport";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
-import { Play, Plus, Check, ThumbsUp, Info, Volume2, VolumeX, X, ArrowUpDown, ArrowUp, ArrowDown, Server, Loader2, MonitorPlay, Film, Clock, Calendar } from "lucide-react";
+import { Play, Plus, Check, ThumbsUp, Info, Volume2, VolumeX, X, ArrowUpDown, ArrowUp, ArrowDown, Server, Loader2, MonitorPlay, Film, Clock, Calendar, Download, ExternalLink, ChevronDown, Package } from "lucide-react";
 import { isInMyList, toggleMyList, isAnimeLiked, toggleLikeAnime } from "@/utils/myList";
 import groupByProvider from "@/utils/groupByProvider";
 
@@ -20,6 +20,38 @@ async function fetchAnimeDetail(id: string) {
     `https://animekudesu-be.gatradigital.com/detail-anime/${id}`
   );
   return data;
+}
+
+interface DownloadLink {
+  title: string;
+  link: string;
+}
+
+interface DownloadResolution {
+  resolution: string;
+  links: DownloadLink[];
+}
+
+interface DownloadFormat {
+  format: string;
+  list: DownloadResolution[];
+}
+
+interface BatchDownloadResponse {
+  title?: string;
+  img?: string;
+  downloads: DownloadFormat[];
+}
+
+async function fetchBatchDownload(id: string): Promise<BatchDownloadResponse> {
+  try {
+    const { data } = await axios.get(
+      `https://animekudesu-be.gatradigital.com/download-anime/${id}`
+    );
+    return data;
+  } catch {
+    return { downloads: [] };
+  }
 }
 
 interface AnimePageProps {
@@ -38,11 +70,16 @@ const Anime = (props: AnimePageProps) => {
     videos: { id: string; title: string; video: string; type: string }[];
     title: string;
     description: string;
+    downloads?: DownloadFormat[];
   } | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // desc = newest first, asc = oldest first
+  const [selectedFormat, setSelectedFormat] = useState<string>('');
+  const [expandedResolutions, setExpandedResolutions] = useState<string[]>([]);
+  const [selectedEpisodeFormat, setSelectedEpisodeFormat] = useState<string>('');
+  const [expandedEpisodeResolutions, setExpandedEpisodeResolutions] = useState<string[]>([]);
   
   // Get trailer info from config
   const trailer = getTrailerBySlug(id);
@@ -52,6 +89,52 @@ const Anime = (props: AnimePageProps) => {
     queryKey: ["detail-anime", id],
     queryFn: () => fetchAnimeDetail(id),
   });
+
+  const { data: batchDownload, isLoading: isLoadingBatch } = useQuery({
+    queryKey: ["batch-download", id],
+    queryFn: () => fetchBatchDownload(id),
+    enabled: !!data,
+  });
+
+  // Set default format when batch download data is loaded
+  useEffect(() => {
+    if (batchDownload?.downloads && batchDownload.downloads.length > 0 && !selectedFormat) {
+      setSelectedFormat(batchDownload.downloads[0].format);
+    }
+  }, [batchDownload, selectedFormat]);
+
+  // Toggle resolution expansion
+  const toggleResolution = (resolution: string) => {
+    setExpandedResolutions(prev => 
+      prev.includes(resolution) 
+        ? prev.filter(r => r !== resolution)
+        : [...prev, resolution]
+    );
+  };
+
+  // Toggle episode download resolution expansion
+  const toggleEpisodeResolution = (resolution: string) => {
+    setExpandedEpisodeResolutions(prev => 
+      prev.includes(resolution) 
+        ? prev.filter(r => r !== resolution)
+        : [...prev, resolution]
+    );
+  };
+
+  // Set default episode format when episode details are loaded
+  useEffect(() => {
+    if (episodeDetails?.downloads && episodeDetails.downloads.length > 0 && !selectedEpisodeFormat) {
+      setSelectedEpisodeFormat(episodeDetails.downloads[0].format);
+    }
+  }, [episodeDetails, selectedEpisodeFormat]);
+
+  // Reset episode download state when modal closes
+  useEffect(() => {
+    if (!showPlayer) {
+      setSelectedEpisodeFormat('');
+      setExpandedEpisodeResolutions([]);
+    }
+  }, [showPlayer]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -177,6 +260,8 @@ const Anime = (props: AnimePageProps) => {
       const response = await axios.get(
         `https://animekudesu-be.gatradigital.com${latestEpisode.detail_eps}`
       );
+
+      console.log("response.data loh yah =>", response);
       
       setEpisodeDetails(response.data);
       
@@ -334,6 +419,16 @@ const Anime = (props: AnimePageProps) => {
                   <span className="hidden sm:inline">More Info</span>
                   <span className="sm:hidden">Info</span>
                 </button>
+                {batchDownload && batchDownload.downloads && batchDownload.downloads.length > 0 && (
+                  <button 
+                    onClick={() => document.getElementById('batch-download-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-emerald-600/80 hover:bg-emerald-600 text-white font-semibold py-1.5 px-3 sm:py-2 sm:px-4 md:py-3 md:px-8 rounded flex items-center gap-1.5 sm:gap-2 transition-all text-xs sm:text-sm md:text-base"
+                  >
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                    <span className="hidden sm:inline">Download</span>
+                    <span className="sm:hidden">DL</span>
+                  </button>
+                )}
                 <button 
                   onClick={handleToggleMyList}
                   className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border sm:border-2 flex items-center justify-center transition-all ${
@@ -445,6 +540,102 @@ const Anime = (props: AnimePageProps) => {
             </div>
           )}
         </div>
+
+        {/* Batch Download Section */}
+        {batchDownload && batchDownload.downloads && batchDownload.downloads.length > 0 && (
+          <div id="batch-download-section" className="px-4 sm:px-6 md:px-16 mt-8 md:mt-12">
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-heading tracking-wide">BATCH DOWNLOAD</h2>
+                <p className="text-xs sm:text-sm text-gray-400">Download semua episode sekaligus</p>
+              </div>
+            </div>
+
+            {isLoadingBatch ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-gray-900/80 to-gray-950/80 border border-gray-800/50 rounded-2xl overflow-hidden">
+                {/* Format Tabs */}
+                <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-800/50">
+                  {batchDownload.downloads.map((format) => (
+                    <button
+                      key={format.format}
+                      onClick={() => setSelectedFormat(format.format)}
+                      className={`relative px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium whitespace-nowrap transition-all duration-200 ${
+                        selectedFormat === format.format
+                          ? 'text-emerald-400'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {format.format}
+                      {selectedFormat === format.format && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Resolution List */}
+                <div className="p-3 sm:p-4 md:p-6 space-y-3">
+                  {batchDownload.downloads
+                    .find(f => f.format === selectedFormat)
+                    ?.list.map((resolution) => {
+                      const isExpanded = expandedResolutions.includes(`${selectedFormat}-${resolution.resolution}`);
+                      return (
+                        <div 
+                          key={resolution.resolution}
+                          className="bg-gray-800/40 border border-gray-700/30 rounded-xl overflow-hidden hover:border-gray-600/50 transition-colors"
+                        >
+                          {/* Resolution Header */}
+                          <button
+                            onClick={() => toggleResolution(`${selectedFormat}-${resolution.resolution}`)}
+                            className="w-full flex items-center justify-between p-3 sm:p-4 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 sm:w-14 h-8 sm:h-9 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                <span className="text-emerald-400 text-xs sm:text-sm font-bold">{resolution.resolution}</span>
+                              </div>
+                              <div className="text-left">
+                                <span className="text-white text-sm sm:text-base font-medium">{selectedFormat} - {resolution.resolution}</span>
+                                <p className="text-gray-500 text-xs">{resolution.links.length} mirror tersedia</p>
+                              </div>
+                            </div>
+                            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          {/* Download Links */}
+                          {isExpanded && (
+                            <div className="px-3 sm:px-4 pb-3 sm:pb-4">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                {resolution.links.map((link, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={link.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-gray-700/40 hover:bg-emerald-500/20 border border-gray-600/30 hover:border-emerald-500/40 transition-all duration-200"
+                                  >
+                                    <Download className="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-400 transition-colors" />
+                                    <span className="text-xs sm:text-sm text-gray-300 group-hover:text-emerald-400 font-medium transition-colors">{link.title}</span>
+                                    <ExternalLink className="w-3 h-3 text-gray-500 group-hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all" />
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* More Details Section */}
         <div id="about-section" className="px-4 sm:px-6 md:px-16 mt-8 md:mt-16">
@@ -629,6 +820,86 @@ const Anime = (props: AnimePageProps) => {
                           </div>
                         )
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Episode Download Section */}
+                {episodeDetails?.downloads && episodeDetails.downloads.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-700/50">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Download className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                      <h3 className="text-sm sm:text-base font-semibold text-white">Download Episode</h3>
+                    </div>
+
+                    <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl overflow-hidden">
+                      {/* Format Tabs */}
+                      <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-700/50">
+                        {episodeDetails.downloads.map((format) => (
+                          <button
+                            key={format.format}
+                            onClick={() => setSelectedEpisodeFormat(format.format)}
+                            className={`px-4 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                              selectedEpisodeFormat === format.format
+                                ? 'text-emerald-400 bg-gray-700/50 border-b-2 border-emerald-500'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
+                            }`}
+                          >
+                            {format.format.length > 20 ? format.format.split(' ')[0] : format.format}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Resolution List */}
+                      <div className="p-3 space-y-2">
+                        {episodeDetails.downloads
+                          .find(f => f.format === selectedEpisodeFormat)
+                          ?.list.map((resolution) => {
+                            const isExpanded = expandedEpisodeResolutions.includes(`${selectedEpisodeFormat}-${resolution.resolution}`);
+                            return (
+                              <div 
+                                key={resolution.resolution}
+                                className={`rounded-lg overflow-hidden transition-colors ${
+                                  isExpanded ? 'bg-gray-700/40' : 'bg-gray-700/20 hover:bg-gray-700/30'
+                                }`}
+                              >
+                                <button
+                                  onClick={() => toggleEpisodeResolution(`${selectedEpisodeFormat}-${resolution.resolution}`)}
+                                  className="w-full flex items-center justify-between p-2.5 sm:p-3"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                                      {resolution.resolution}
+                                    </span>
+                                    <span className="text-gray-500 text-xs">
+                                      {resolution.links.length} link
+                                    </span>
+                                  </div>
+                                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isExpanded && (
+                                  <div className="px-2.5 sm:px-3 pb-2.5 sm:pb-3">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {resolution.links.map((link, idx) => (
+                                        <a
+                                          key={idx}
+                                          href={link.link}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1 px-2.5 py-1.5 rounded bg-gray-600/50 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-400 text-xs transition-colors"
+                                        >
+                                          <Download className="w-3 h-3" />
+                                          {link.title}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
                     </div>
                   </div>
                 )}

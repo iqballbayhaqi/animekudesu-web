@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Star, Play, Plus, ChevronRight, Radio, CheckCircle } from "lucide-react";
+import { Star, Play, Plus, ChevronRight, Radio, CheckCircle, Check } from "lucide-react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
+import { toggleMyList, isInMyList } from "@/utils/myList";
 
 interface ListItemHorizontalProps {
   title: string;
@@ -58,18 +59,70 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
   const { title, placeholder, apifetch, queryKey, categorySlug, seeAllHref, variant = "default" } = props;
   const config = VARIANT_CONFIG[variant];
   
+  // Track which anime are in My List
+  const [myListItems, setMyListItems] = useState<Set<string>>(new Set());
+  
   // Determine the "See All" link
   const seeAllLink = seeAllHref || (categorySlug ? `/category/${categorySlug}` : null);
 
-  async function fetch() {
-    const { data } = await axios.get(apifetch);
-    return data;
-  }
-
+  // Fetch anime data
   const data = useQuery({
     queryKey: [queryKey || Math.random().toString(36).substring(2, 15)],
-    queryFn: fetch,
+    queryFn: async () => {
+      const { data } = await axios.get(apifetch);
+      return data;
+    },
   });
+
+  // Initialize and listen for My List updates
+  useEffect(() => {
+    // Check initial state from loaded anime data
+    const checkMyList = () => {
+      if (data.data?.data) {
+        const newSet = new Set<string>();
+        data.data.data.forEach((anime: Anime) => {
+          const link = `/anime${anime.slug}`;
+          if (isInMyList(link)) {
+            newSet.add(link);
+          }
+        });
+        setMyListItems(newSet);
+      }
+    };
+    
+    checkMyList();
+    
+    const handleUpdate = () => checkMyList();
+    window.addEventListener('mylist-updated', handleUpdate);
+    return () => window.removeEventListener('mylist-updated', handleUpdate);
+  }, [data.data]);
+
+  // Handle toggle My List
+  const handleToggleMyList = useCallback((e: React.MouseEvent, anime: Anime) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const link = `/anime${anime.slug}`;
+    toggleMyList({
+      link,
+      img: anime.img,
+      alt: anime.alt,
+      title: anime.title,
+      type: anime.type,
+      score: anime.score,
+    });
+    
+    // Update local state immediately for better UX
+    setMyListItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(link)) {
+        newSet.delete(link);
+      } else {
+        newSet.add(link);
+      }
+      return newSet;
+    });
+  }, []);
 
   return (
     <div className="w-full px-4 md:px-8 lg:px-12">
@@ -163,10 +216,15 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
                       {/* Bottom Actions */}
                       <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                         <button 
-                          onClick={(e) => { e.preventDefault(); }}
-                          className="w-8 h-8 rounded-full border-2 border-gray-400 hover:border-white bg-black/50 flex items-center justify-center transition-colors"
+                          onClick={(e) => handleToggleMyList(e, anime)}
+                          className={`w-8 h-8 rounded-full border-2 ${myListItems.has(`/anime${anime.slug}`) ? 'border-green-500 bg-green-500/50' : 'border-gray-400 hover:border-white bg-black/50'} flex items-center justify-center transition-colors`}
+                          title={myListItems.has(`/anime${anime.slug}`) ? 'Hapus dari My List' : 'Tambah ke My List'}
                         >
-                          <Plus className="w-4 h-4 text-white" />
+                          {myListItems.has(`/anime${anime.slug}`) ? (
+                            <Check className="w-4 h-4 text-white" />
+                          ) : (
+                            <Plus className="w-4 h-4 text-white" />
+                          )}
                         </button>
                       </div>
                     </div>
