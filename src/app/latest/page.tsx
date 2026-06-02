@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Star, Play, Clock, Loader2 } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface Anime {
   link: string;
@@ -28,7 +29,7 @@ interface LatestResponse {
 
 async function fetchLatestAnime(page: number): Promise<LatestResponse> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/new-anime?page=${page}`
+    `${API_URL}/new-anime?page=${page}`
   );
   return data;
 }

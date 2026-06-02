@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Star, Play, TrendingUp, Flame, Eye, ArrowUpAZ, ArrowDownAZ, Clock, Sparkles, Loader2, Compass } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface Anime {
   detail_url: string;
@@ -47,7 +48,7 @@ const ORDER_ICONS: { [key: string]: React.ReactNode } = {
 
 async function fetchOrderAnime(order: string, page: number): Promise<OrderAnimeResponse> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/order-anime/${order}?page=${page}`
+    `${API_URL}/order-anime/${order}?page=${page}`
   );
   return data;
 }
@@ -55,7 +56,7 @@ async function fetchOrderAnime(order: string, page: number): Promise<OrderAnimeR
 // Fetch first page to get available orders
 async function fetchAvailableOrders(): Promise<OrderOption[]> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/order-anime/popular?page=1`
+    `${API_URL}/order-anime/popular?page=1`
   );
   return data.available_orders;
 }

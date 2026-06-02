@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Star, Play, ArrowLeft, Loader2 } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface Anime {
   detail_url: string;
@@ -31,7 +32,7 @@ interface GenrePageProps {
 
 async function fetchGenreAnime(id: string, page: number): Promise<GenreResponse> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/genre-anime/${id}?page=${page}`
+    `${API_URL}/genre-anime/${id}?page=${page}`
   );
   return data;
 }

@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Film, ChevronRight } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface Genre {
   title: string;
@@ -16,7 +17,7 @@ interface Genre {
 
 async function fetchGenres() {
   const { data } = await axios.get(
-    "https://api.animekudesu.web.id/genres"
+    `${API_URL}/genres`
   );
   return data;
 }

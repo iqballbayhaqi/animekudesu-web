@@ -14,10 +14,11 @@ import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
 import { Play, Plus, Check, ThumbsUp, Info, Volume2, VolumeX, X, ArrowUpDown, ArrowUp, ArrowDown, Server, Loader2, MonitorPlay, Film, Clock, Calendar, Download, ExternalLink, ChevronDown, Package } from "lucide-react";
 import { isInMyList, toggleMyList, isAnimeLiked, toggleLikeAnime } from "@/utils/myList";
 import groupByProvider from "@/utils/groupByProvider";
+import { API_URL } from '@/utils/config';
 
 async function fetchAnimeDetail(id: string) {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/detail-anime/${id}`
+    `${API_URL}/detail-anime/${id}`
   );
   return data;
 }
@@ -46,7 +47,7 @@ interface BatchDownloadResponse {
 async function fetchBatchDownload(id: string): Promise<BatchDownloadResponse> {
   try {
     const { data } = await axios.get(
-      `https://api.animekudesu.web.id/download-anime/${id}`
+      `${API_URL}/download-anime/${id}`
     );
     return data;
   } catch {
@@ -196,7 +197,7 @@ const Anime = (props: AnimePageProps) => {
     try {
       setIsLoadingVideo(true);
       setSelectedVideoPath(videoPath);
-      const response = await fetch(`https://api.animekudesu.web.id${videoPath}`);
+      const response = await fetch(`${API_URL}${videoPath}`);
       const videoData = await response.json();
       setVideoUrl(videoData.url);
     } catch (error) {
@@ -258,7 +259,7 @@ const Anime = (props: AnimePageProps) => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://api.animekudesu.web.id${latestEpisode.detail_eps}`
+        `${API_URL}${latestEpisode.detail_eps}`
       );
 
       console.log("response.data loh yah =>", response);

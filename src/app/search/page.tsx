@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Star, Play, Search, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import { API_URL } from '@/utils/config';
 
 interface Anime {
   detail_url: string;
@@ -25,7 +26,7 @@ interface Genre {
 }
 
 const fetchAnime = async (query: string) => {
-  const res = await axios.get(`https://api.animekudesu.web.id/search-anime?search=${encodeURIComponent(query)}`);
+  const res = await axios.get(`${API_URL}/search-anime?search=${encodeURIComponent(query)}`);
   return res.data;
 };
 

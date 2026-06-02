@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Star, Play, Calendar, Clock, List, Grid3X3, X } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface ScheduleAnime {
   title: string;
@@ -39,7 +40,7 @@ interface ScheduleResponse {
 
 async function fetchSchedule(day: string): Promise<ScheduleResponse> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/release-schedule?day=${day}`
+    `${API_URL}/release-schedule?day=${day}`
   );
   return data;
 }

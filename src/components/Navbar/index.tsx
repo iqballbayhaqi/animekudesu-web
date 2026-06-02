@@ -4,6 +4,7 @@ import { UserRound, Bookmark, Search, Play, Bell, Menu, X, Home, Film, Heart, Ca
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { API_URL } from '@/utils/config';
 
 interface NotificationAnime {
   img: string;
@@ -55,7 +56,7 @@ const Navbar = () => {
       if (isNotificationOpen && notifications.length === 0) {
         setIsLoadingNotifications(true);
         try {
-          const response = await fetch('https://api.animekudesu.web.id/order-anime/latest-update');
+          const response = await fetch(`${API_URL}/order-anime/latest-update`);
           const data: NotificationResponse = await response.json();
           setNotifications(data.data.slice(0, 10)); // Show only 10 latest
         } catch (error) {

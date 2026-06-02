@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import axios from "axios";
 import { X, Play, Clock, Server, Loader2, MonitorPlay } from "lucide-react";
 import groupByProvider from "@/utils/groupByProvider";
+import { API_URL } from '@/utils/config';
 
 interface EpisodeCardProps {
   episodeNumber: number;
@@ -46,7 +47,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
 
   async function fetchEpisodeDetails() {
     const { data } = await axios.get(
-      `https://api.animekudesu.web.id${detail_eps}`
+      `${API_URL}${detail_eps}`
     );
     return data;
   }
@@ -73,7 +74,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
     
     try {
       const response = await fetch(
-        `https://api.animekudesu.web.id${video}`
+        `${API_URL}${video}`
       );
       const data = await response.json();
       setVideoUrl(data.url);

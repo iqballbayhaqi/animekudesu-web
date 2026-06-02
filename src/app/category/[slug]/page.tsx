@@ -8,6 +8,7 @@ import Link from "next/link";
 import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Play, Star, Loader2, Film, CheckCircle } from "lucide-react";
+import { API_URL } from '@/utils/config';
 
 interface Anime {
   detail_url: string;
@@ -35,12 +36,12 @@ interface PageProps {
 const categoryConfig: Record<string, { title: string; apiUrl: string; icon: React.ReactNode }> = {
   ongoing: {
     title: "On Going Anime",
-    apiUrl: "https://api.animekudesu.web.id/ongoing-anime",
+    apiUrl: `${API_URL}/ongoing-anime`,
     icon: <Film className="w-8 h-8 text-red-600" />,
   },
   completed: {
     title: "Completed Anime",
-    apiUrl: "https://api.animekudesu.web.id/completed-anime",
+    apiUrl: `${API_URL}/completed-anime`,
     icon: <CheckCircle className="w-8 h-8 text-green-600" />,
   },
 };

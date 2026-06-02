@@ -13,10 +13,11 @@ import OnePieceLogo from "./One-Piece-Logo.png";
 import { Play, Plus, Check, ThumbsUp, Volume2, VolumeX, X, ArrowUp, ArrowDown, Anchor, Ship, Skull, Compass, MapPin } from "lucide-react";
 import { isInMyList, toggleMyList, isAnimeLiked, toggleLikeAnime } from "@/utils/myList";
 import groupByProvider from "@/utils/groupByProvider";
+import { API_URL } from '@/utils/config';
 
 async function fetchAnimeDetail() {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/detail-anime/one-piece`
+    `${API_URL}/detail-anime/one-piece`
   );
   return data;
 }
@@ -117,7 +118,7 @@ const OnePiecePage = () => {
 
   const fetchVideoUrl = useCallback(async (videoPath: string) => {
     try {
-      const response = await fetch(`https://api.animekudesu.web.id${videoPath}`);
+      const response = await fetch(`${API_URL}${videoPath}`);
       const videoData = await response.json();
       setVideoUrl(videoData.url);
     } catch (error) {
@@ -136,7 +137,7 @@ const OnePiecePage = () => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://api.animekudesu.web.id${latestEpisode.detail_eps}`
+        `${API_URL}${latestEpisode.detail_eps}`
       );
       
       setEpisodeDetails(response.data);
@@ -156,7 +157,7 @@ const OnePiecePage = () => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://api.animekudesu.web.id${detail_eps}`
+        `${API_URL}${detail_eps}`
       );
       
       setEpisodeDetails(response.data);

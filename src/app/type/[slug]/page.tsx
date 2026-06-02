@@ -9,6 +9,7 @@ import Loading from "@/components/Loading";
 import Footer from "@/components/Footer";
 import { Star, Play, Tv, Film, Clapperboard, Sparkles, Popcorn, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { API_URL } from '@/utils/config';
 
 interface Genre {
   tag: string;
@@ -71,7 +72,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color:
 
 async function fetchTypeAnime(type: string, page: number): Promise<TypeResponse> {
   const { data } = await axios.get(
-    `https://api.animekudesu.web.id/type-anime/${type}?page=${page}`
+    `${API_URL}/type-anime/${type}?page=${page}`
   );
   return data;
 }

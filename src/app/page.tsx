@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 import { X, Play, Info, Plus, Check, Star, Calendar, Film, Clock, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { getTrailerBySlug, getYouTubeEmbedUrl } from "@/utils/animeTrailers";
 import { isInMyList, toggleMyList, getMyList } from "@/utils/myList";
+import { API_URL } from '@/utils/config';
 
 // Check if banner should be shown (once per day)
 const BANNER_STORAGE_KEY = 'animekudesu_banner_last_shown';
@@ -59,7 +60,7 @@ interface Genres {
 
 async function fetchNewAnime() {
   const { data } = await axios.get(
-    "https://api.animekudesu.web.id/new-anime"
+    `${API_URL}/new-anime`
   );
   return data;
 }
@@ -67,7 +68,7 @@ async function fetchNewAnime() {
 // /genres
 async function fetchGenres() {
   const { data } = await axios.get(
-    "https://api.animekudesu.web.id/genres"
+    `${API_URL}/genres`
   );
   return data;
 }
@@ -371,14 +372,14 @@ export default function Home() {
       <div className="flex flex-col gap-4 my-4">
         <ListItemHorizontal 
           title="On Going Anime" 
-          apifetch="https://api.animekudesu.web.id/ongoing-anime" 
+          apifetch={`${API_URL}/ongoing-anime`} 
           queryKey="on-going-anime" 
           categorySlug="ongoing"
           variant="ongoing"
         />
         <ListItemHorizontal 
           title="Completed Anime" 
-          apifetch="https://api.animekudesu.web.id/completed-anime" 
+          apifetch={`${API_URL}/completed-anime`} 
           queryKey="completed-anime" 
           categorySlug="completed"
           variant="completed"
@@ -412,7 +413,7 @@ export default function Home() {
               <ListItemHorizontal
                 key={`genre-${index}`}
                 title={genre.title}
-                apifetch={`https://api.animekudesu.web.id/genre-anime/${genre.id}`}
+                apifetch={`${API_URL}/genre-anime/${genre.id}`}
                 queryKey={`genre-${genre.id}`}
                 seeAllHref={`/genres/${genre.id}`}
               />
@@ -426,7 +427,7 @@ export default function Home() {
                   key={`type-${typeConfig.typeValue}`}
                   title={typeConfig.title}
                   typeValue={typeConfig.typeValue}
-                  apifetch={`https://api.animekudesu.web.id/type-anime/${typeConfig.typeValue}`}
+                  apifetch={`${API_URL}/type-anime/${typeConfig.typeValue}`}
                   queryKey={typeConfig.queryKey}
                   seeAllHref={`/type/${typeConfig.typeValue}`}
                 />
@@ -443,7 +444,7 @@ export default function Home() {
                 key={`type-${typeConfig.typeValue}`}
                 title={typeConfig.title}
                 typeValue={typeConfig.typeValue}
-                apifetch={`https://api.animekudesu.web.id/type-anime/${typeConfig.typeValue}`}
+                apifetch={`${API_URL}/type-anime/${typeConfig.typeValue}`}
                 queryKey={typeConfig.queryKey}
                 seeAllHref={`/type/${typeConfig.typeValue}`}
               />
