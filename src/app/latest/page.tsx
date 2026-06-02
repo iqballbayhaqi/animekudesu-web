@@ -28,7 +28,7 @@ interface LatestResponse {
 
 async function fetchLatestAnime(page: number): Promise<LatestResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/new-anime?page=${page}`
+    `https://api.animekudesu.web.id/new-anime?page=${page}`
   );
   return data;
 }

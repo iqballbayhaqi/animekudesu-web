@@ -39,7 +39,7 @@ interface ScheduleResponse {
 
 async function fetchSchedule(day: string): Promise<ScheduleResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/release-schedule?day=${day}`
+    `https://api.animekudesu.web.id/release-schedule?day=${day}`
   );
   return data;
 }

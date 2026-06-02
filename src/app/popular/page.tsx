@@ -47,7 +47,7 @@ const ORDER_ICONS: { [key: string]: React.ReactNode } = {
 
 async function fetchOrderAnime(order: string, page: number): Promise<OrderAnimeResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/order-anime/${order}?page=${page}`
+    `https://api.animekudesu.web.id/order-anime/${order}?page=${page}`
   );
   return data;
 }
@@ -55,7 +55,7 @@ async function fetchOrderAnime(order: string, page: number): Promise<OrderAnimeR
 // Fetch first page to get available orders
 async function fetchAvailableOrders(): Promise<OrderOption[]> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/order-anime/popular?page=1`
+    `https://api.animekudesu.web.id/order-anime/popular?page=1`
   );
   return data.available_orders;
 }

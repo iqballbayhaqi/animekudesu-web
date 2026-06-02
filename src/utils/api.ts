@@ -1,6 +1,6 @@
 export const fetchNewAnime = async () => {
   try {
-    const response = await fetch('https://animekudesu-be.gatradigital.com/new-anime');
+    const response = await fetch('https://api.animekudesu.web.id/new-anime');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

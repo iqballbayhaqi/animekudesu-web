@@ -25,7 +25,7 @@ interface Genre {
 }
 
 const fetchAnime = async (query: string) => {
-  const res = await axios.get(`https://animekudesu-be.gatradigital.com/search-anime?search=${encodeURIComponent(query)}`);
+  const res = await axios.get(`https://api.animekudesu.web.id/search-anime?search=${encodeURIComponent(query)}`);
   return res.data;
 };
 

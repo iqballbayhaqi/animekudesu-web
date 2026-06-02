@@ -17,7 +17,7 @@ import groupByProvider from "@/utils/groupByProvider";
 
 async function fetchAnimeDetail(id: string) {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/detail-anime/${id}`
+    `https://api.animekudesu.web.id/detail-anime/${id}`
   );
   return data;
 }
@@ -46,7 +46,7 @@ interface BatchDownloadResponse {
 async function fetchBatchDownload(id: string): Promise<BatchDownloadResponse> {
   try {
     const { data } = await axios.get(
-      `https://animekudesu-be.gatradigital.com/download-anime/${id}`
+      `https://api.animekudesu.web.id/download-anime/${id}`
     );
     return data;
   } catch {
@@ -196,7 +196,7 @@ const Anime = (props: AnimePageProps) => {
     try {
       setIsLoadingVideo(true);
       setSelectedVideoPath(videoPath);
-      const response = await fetch(`https://animekudesu-be.gatradigital.com${videoPath}`);
+      const response = await fetch(`https://api.animekudesu.web.id${videoPath}`);
       const videoData = await response.json();
       setVideoUrl(videoData.url);
     } catch (error) {
@@ -258,7 +258,7 @@ const Anime = (props: AnimePageProps) => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://animekudesu-be.gatradigital.com${latestEpisode.detail_eps}`
+        `https://api.animekudesu.web.id${latestEpisode.detail_eps}`
       );
 
       console.log("response.data loh yah =>", response);

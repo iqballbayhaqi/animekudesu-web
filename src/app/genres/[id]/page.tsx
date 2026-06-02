@@ -31,7 +31,7 @@ interface GenrePageProps {
 
 async function fetchGenreAnime(id: string, page: number): Promise<GenreResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/genre-anime/${id}?page=${page}`
+    `https://api.animekudesu.web.id/genre-anime/${id}?page=${page}`
   );
   return data;
 }

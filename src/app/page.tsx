@@ -59,7 +59,7 @@ interface Genres {
 
 async function fetchNewAnime() {
   const { data } = await axios.get(
-    "https://animekudesu-be.gatradigital.com/new-anime"
+    "https://api.animekudesu.web.id/new-anime"
   );
   return data;
 }
@@ -67,7 +67,7 @@ async function fetchNewAnime() {
 // /genres
 async function fetchGenres() {
   const { data } = await axios.get(
-    "https://animekudesu-be.gatradigital.com/genres"
+    "https://api.animekudesu.web.id/genres"
   );
   return data;
 }
@@ -371,14 +371,14 @@ export default function Home() {
       <div className="flex flex-col gap-4 my-4">
         <ListItemHorizontal 
           title="On Going Anime" 
-          apifetch="https://animekudesu-be.gatradigital.com/ongoing-anime" 
+          apifetch="https://api.animekudesu.web.id/ongoing-anime" 
           queryKey="on-going-anime" 
           categorySlug="ongoing"
           variant="ongoing"
         />
         <ListItemHorizontal 
           title="Completed Anime" 
-          apifetch="https://animekudesu-be.gatradigital.com/completed-anime" 
+          apifetch="https://api.animekudesu.web.id/completed-anime" 
           queryKey="completed-anime" 
           categorySlug="completed"
           variant="completed"
@@ -412,7 +412,7 @@ export default function Home() {
               <ListItemHorizontal
                 key={`genre-${index}`}
                 title={genre.title}
-                apifetch={`https://animekudesu-be.gatradigital.com/genre-anime/${genre.id}`}
+                apifetch={`https://api.animekudesu.web.id/genre-anime/${genre.id}`}
                 queryKey={`genre-${genre.id}`}
                 seeAllHref={`/genres/${genre.id}`}
               />
@@ -426,7 +426,7 @@ export default function Home() {
                   key={`type-${typeConfig.typeValue}`}
                   title={typeConfig.title}
                   typeValue={typeConfig.typeValue}
-                  apifetch={`https://animekudesu-be.gatradigital.com/type-anime/${typeConfig.typeValue}`}
+                  apifetch={`https://api.animekudesu.web.id/type-anime/${typeConfig.typeValue}`}
                   queryKey={typeConfig.queryKey}
                   seeAllHref={`/type/${typeConfig.typeValue}`}
                 />
@@ -443,7 +443,7 @@ export default function Home() {
                 key={`type-${typeConfig.typeValue}`}
                 title={typeConfig.title}
                 typeValue={typeConfig.typeValue}
-                apifetch={`https://animekudesu-be.gatradigital.com/type-anime/${typeConfig.typeValue}`}
+                apifetch={`https://api.animekudesu.web.id/type-anime/${typeConfig.typeValue}`}
                 queryKey={typeConfig.queryKey}
                 seeAllHref={`/type/${typeConfig.typeValue}`}
               />

@@ -35,12 +35,12 @@ interface PageProps {
 const categoryConfig: Record<string, { title: string; apiUrl: string; icon: React.ReactNode }> = {
   ongoing: {
     title: "On Going Anime",
-    apiUrl: "https://animekudesu-be.gatradigital.com/ongoing-anime",
+    apiUrl: "https://api.animekudesu.web.id/ongoing-anime",
     icon: <Film className="w-8 h-8 text-red-600" />,
   },
   completed: {
     title: "Completed Anime",
-    apiUrl: "https://animekudesu-be.gatradigital.com/completed-anime",
+    apiUrl: "https://api.animekudesu.web.id/completed-anime",
     icon: <CheckCircle className="w-8 h-8 text-green-600" />,
   },
 };

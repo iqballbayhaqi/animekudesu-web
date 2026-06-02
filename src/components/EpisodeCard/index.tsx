@@ -46,7 +46,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
 
   async function fetchEpisodeDetails() {
     const { data } = await axios.get(
-      `https://animekudesu-be.gatradigital.com${detail_eps}`
+      `https://api.animekudesu.web.id${detail_eps}`
     );
     return data;
   }
@@ -73,7 +73,7 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({
     
     try {
       const response = await fetch(
-        `https://animekudesu-be.gatradigital.com${video}`
+        `https://api.animekudesu.web.id${video}`
       );
       const data = await response.json();
       setVideoUrl(data.url);

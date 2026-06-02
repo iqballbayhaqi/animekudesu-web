@@ -71,7 +71,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color:
 
 async function fetchTypeAnime(type: string, page: number): Promise<TypeResponse> {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/type-anime/${type}?page=${page}`
+    `https://api.animekudesu.web.id/type-anime/${type}?page=${page}`
   );
   return data;
 }

@@ -55,7 +55,7 @@ const Navbar = () => {
       if (isNotificationOpen && notifications.length === 0) {
         setIsLoadingNotifications(true);
         try {
-          const response = await fetch('https://animekudesu-be.gatradigital.com/order-anime/latest-update');
+          const response = await fetch('https://api.animekudesu.web.id/order-anime/latest-update');
           const data: NotificationResponse = await response.json();
           setNotifications(data.data.slice(0, 10)); // Show only 10 latest
         } catch (error) {

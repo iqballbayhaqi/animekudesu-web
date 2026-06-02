@@ -16,7 +16,7 @@ interface Genre {
 
 async function fetchGenres() {
   const { data } = await axios.get(
-    "https://animekudesu-be.gatradigital.com/genres"
+    "https://api.animekudesu.web.id/genres"
   );
   return data;
 }

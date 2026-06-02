@@ -16,7 +16,7 @@ import groupByProvider from "@/utils/groupByProvider";
 
 async function fetchAnimeDetail() {
   const { data } = await axios.get(
-    `https://animekudesu-be.gatradigital.com/detail-anime/one-piece`
+    `https://api.animekudesu.web.id/detail-anime/one-piece`
   );
   return data;
 }
@@ -117,7 +117,7 @@ const OnePiecePage = () => {
 
   const fetchVideoUrl = useCallback(async (videoPath: string) => {
     try {
-      const response = await fetch(`https://animekudesu-be.gatradigital.com${videoPath}`);
+      const response = await fetch(`https://api.animekudesu.web.id${videoPath}`);
       const videoData = await response.json();
       setVideoUrl(videoData.url);
     } catch (error) {
@@ -136,7 +136,7 @@ const OnePiecePage = () => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://animekudesu-be.gatradigital.com${latestEpisode.detail_eps}`
+        `https://api.animekudesu.web.id${latestEpisode.detail_eps}`
       );
       
       setEpisodeDetails(response.data);
@@ -156,7 +156,7 @@ const OnePiecePage = () => {
       setShowPlayer(true);
       
       const response = await axios.get(
-        `https://animekudesu-be.gatradigital.com${detail_eps}`
+        `https://api.animekudesu.web.id${detail_eps}`
       );
       
       setEpisodeDetails(response.data);
