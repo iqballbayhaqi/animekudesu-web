@@ -57,6 +57,7 @@ const OnePiecePage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [episodeDetails, setEpisodeDetails] = useState<{
     videos: { id: string; title: string; video: string; type: string }[];
     title: string;
@@ -118,11 +119,15 @@ const OnePiecePage = () => {
 
   const fetchVideoUrl = useCallback(async (videoPath: string) => {
     try {
+      setVideoError(null);
+      setVideoUrl(null);
       const response = await fetch(`${API_URL}${videoPath}`);
       const videoData = await response.json();
+      if (!response.ok || !videoData.url) throw new Error(videoData.message || 'Server video tidak tersedia');
       setVideoUrl(videoData.url);
     } catch (error) {
       console.error('Failed to fetch video:', error);
+      setVideoError(error instanceof Error ? error.message : 'Server video tidak tersedia');
     }
   }, []);
 
@@ -636,7 +641,7 @@ const OnePiecePage = () => {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center">
                   <span className="text-5xl mb-4 animate-bounce">⚓</span>
-                  <div className="animate-spin w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full" />
+                  {videoError ? <p className="text-red-400 text-sm">{videoError}</p> : <div className="animate-spin w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full" />}
                 </div>
               )}
             </div>

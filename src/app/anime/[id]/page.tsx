@@ -66,6 +66,7 @@ const Anime = (props: AnimePageProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [selectedVideoPath, setSelectedVideoPath] = useState<string | null>(null);
   const [episodeDetails, setEpisodeDetails] = useState<{
     videos: { id: string; title: string; video: string; type: string }[];
@@ -196,12 +197,16 @@ const Anime = (props: AnimePageProps) => {
   const fetchVideoUrl = useCallback(async (videoPath: string) => {
     try {
       setIsLoadingVideo(true);
+      setVideoError(null);
+      setVideoUrl(null);
       setSelectedVideoPath(videoPath);
       const response = await fetch(`${API_URL}${videoPath}`);
       const videoData = await response.json();
+      if (!response.ok || !videoData.url) throw new Error(videoData.message || 'Server video tidak tersedia');
       setVideoUrl(videoData.url);
     } catch (error) {
       console.error('Failed to fetch video:', error);
+      setVideoError(error instanceof Error ? error.message : 'Server video tidak tersedia');
     } finally {
       setIsLoadingVideo(false);
     }
@@ -213,6 +218,7 @@ const Anime = (props: AnimePageProps) => {
     setTimeout(() => {
       setShowPlayer(false);
       setVideoUrl(null);
+      setVideoError(null);
       setEpisodeDetails(null);
       setSelectedVideoPath(null);
     }, 200);
@@ -760,7 +766,7 @@ const Anime = (props: AnimePageProps) => {
                       <div className="absolute inset-0 rounded-full border-2 border-red-600/30 animate-ping" />
                     </div>
                     <p className="text-gray-400 text-sm">
-                      {isLoadingVideo ? 'Loading video...' : 'Loading player...'}
+                      {videoError || (isLoadingVideo ? 'Loading video...' : 'Loading player...')}
                     </p>
                   </div>
                 )}
