@@ -390,7 +390,7 @@ export default function Home() {
       {/* Mixed Genre & Type Anime Sections */}
       <div className="flex flex-col gap-4 my-4">
         {!genres.isLoading && (() => {
-          const genreList = genres.data.data;
+          const genreList: Genres[] = genres.data?.data ?? [];
           const typeAnimeConfigs = [
             { title: "TV Series", typeValue: "tv" as const, queryKey: "type-tv" },
             { title: "OVA", typeValue: "ova" as const, queryKey: "type-ova" },
