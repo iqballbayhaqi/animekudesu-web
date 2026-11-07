@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Star, Play, Plus, ChevronRight, Radio, CheckCircle, Check } from "lucide-react";
 import Link from "next/link";
@@ -61,6 +61,24 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
   
   // Track which anime are in My List
   const [myListItems, setMyListItems] = useState<Set<string>>(new Set());
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [isNear, setIsNear] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setIsNear(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsNear(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '500px' });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
   
   // Determine the "See All" link
   const seeAllLink = seeAllHref || (categorySlug ? `/category/${categorySlug}` : null);
@@ -68,6 +86,7 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
   // Fetch anime data
   const data = useQuery({
     queryKey: [queryKey || Math.random().toString(36).substring(2, 15)],
+    enabled: isNear,
     queryFn: async () => {
       const { data } = await axios.get(apifetch);
       return data;
@@ -125,7 +144,7 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
   }, []);
 
   return (
-    <div className="w-full px-4 md:px-8 lg:px-12">
+    <div ref={sectionRef} className="w-full px-4 md:px-8 lg:px-12">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className={`text-xl md:text-2xl font-heading tracking-wide flex items-center gap-2 group cursor-pointer ${config.color}`}>
@@ -158,13 +177,13 @@ const ListItemHorizontal = (props: ListItemHorizontalProps) => {
         }}
         className="anime-swiper"
       >
-        {(placeholder || data.isLoading
+        {(placeholder || !isNear || data.isLoading
           ? Array.from({ length: 10 })
-          : data.data.data
+          : data.data?.data ?? []
         ).map((anime: Anime, index: number) => {
           return (
             <SwiperSlide key={index}>
-              {placeholder || data.isLoading ? (
+              {placeholder || !isNear || data.isLoading ? (
                 // Skeleton Loading
                 <div className="anime-card-skeleton">
                   <div className="aspect-[2/3] rounded-md overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 relative">
